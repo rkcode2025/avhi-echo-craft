@@ -128,7 +128,7 @@ function Index() {
     <div className="min-h-screen pb-16 text-[14px]">
       {/* top bar */}
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between font-mono text-[12px] text-muted-foreground tracking-wider">
-        <div>EST. 2003</div>
+        <div>EST. 2023</div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
@@ -165,33 +165,29 @@ function Index() {
         </div>
 
         <p className="mt-2 text-[14px] text-muted-foreground">
-          full-stack solana engineer // co-founder{" "}
+          AI/ML engineer // Student{" "}
           <a href="#" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
             <span className="w-3 h-3 rounded-full bg-foreground inline-block" /> ordr.trade
           </a>
         </p>
 
         <p className="mt-5 text-[14px] leading-relaxed text-foreground/90">
-          hey, i'm a full-stack{" "}
-          <span className="inline-flex items-center align-middle px-1 py-0.5 rounded bg-gradient-to-br from-fuchsia-400 to-cyan-400 text-white text-[11px] mx-0.5">◎</span>
-          solana engineer working close to the protocol. i contribute to solana's
-          core infrastructure, including the protocol itself and low-level tooling.
+          I'm a Student with a keen interest in AI/Ml engineering and research. I wish to contribute to
+          core infrastructure, including new designs for language models.
         </p>
         <p className="mt-3 text-[14px] leading-relaxed text-foreground/90">
-          currently specializing in distributed systems and understanding solana's
-          protocol internals. member at <span className="text-foreground underline underline-offset-4">superteam</span>,
-          actively contributing to the ecosystem. i occasionally write about solana internals.
+          currently diving into deep learning and transformer models.
         </p>
 
         {/* skills */}
         <SectionTitle>skill / stack</SectionTitle>
         <div className="flex flex-wrap gap-2.5">
-          <TechCircle label="rs" bg="#000" fg="#fff" />
-          <TechCircle label="C" bg="#283593" fg="#fff" />
-          <TechCircle label="TS" bg="#3178c6" fg="#fff" />
-          <TechCircle label="SOL" bg="linear-gradient(135deg,#9945FF,#14F195)" fg="#000" />
-          <TechCircle label="MET" bg="linear-gradient(135deg,#f59e0b,#ef4444)" fg="#fff" />
-          <TechCircle label="GH" bg="#0d1117" fg="#fff" />
+          <TechCircle label="PY" bg="#3776AB" fg="#fff" />
+          <TechCircle label="SK" bg="#F7931E" fg="#fff" />
+          <TechCircle label="TF" bg="#FF6F00" fg="#fff" />
+          <TechCircle label="PT" bg="#EE4C2C" fg="#fff" />
+          <TechCircle label="HF" bg="#FFD21E" fg="#000" />
+          <TechCircle label="VC" bg="#000000" fg="#fff" />
         </div>
 
         {/* featured work */}
