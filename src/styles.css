@@ -42,7 +42,7 @@
 }
 
 .dark {
-  --background: #181818;
+  --background: #121212;
   --foreground: oklch(0.95 0.005 260);
   --muted: #222222;
   --muted-foreground: oklch(0.65 0.01 260);
