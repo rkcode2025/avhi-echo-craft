@@ -1,10 +1,18 @@
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite"; // <--- Add this import
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig({
-  vite: {
-    plugins: [
-      nitro({ preset: "vercel" }) // <--- Force Vercel output here
-    ],
-  },
+  plugins: [
+    tanstackStart(), 
+    viteReact(),
+    cloudflare({
+      viteEnvironment: {
+        name: "ssr"
+      }
+    })
+  ],
 });
