@@ -5,7 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -39,12 +41,31 @@
   --link: oklch(0.55 0.13 255);
 }
 
+.dark {
+  --background: oklch(0.16 0.01 260);
+  --foreground: oklch(0.95 0.005 260);
+  --muted: oklch(0.22 0.01 260);
+  --muted-foreground: oklch(0.65 0.01 260);
+  --border: oklch(0.28 0.01 260);
+  --card: oklch(0.2 0.01 260);
+  --card-foreground: oklch(0.95 0.005 260);
+  --accent: oklch(0.24 0.01 260);
+  --accent-foreground: oklch(0.95 0.005 260);
+  --primary: oklch(0.95 0.005 260);
+  --primary-foreground: oklch(0.16 0.01 260);
+  --badge: oklch(0.32 0.08 300);
+  --badge-foreground: oklch(0.88 0.06 300);
+  --link: oklch(0.75 0.12 255);
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html, body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-mono);
-    font-feature-settings: "ss01", "cv01";
+    font-family: var(--font-sans);
+    font-weight: 500;
   }
+  .font-mono { font-family: var(--font-mono); }
+  .font-serif { font-family: var(--font-serif); }
 }
