@@ -77,14 +77,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Syphax — AI/ML Engineer" },
+      {
+        name: "description",
+        content:
+          "Student AI/ML engineer building custom language model architectures and research tools.",
+      },
+      { name: "author", content: "Syphax" },
+      // Open Graph (Facebook, LinkedIn, Discord etc.)
+      { property: "og:title", content: "Syphax — AI/ML Engineer" },
+      {
+        property: "og:description",
+        content:
+          "Student AI/ML engineer building custom language model architectures and research tools.",
+      },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://yourdomain.com" }, // ← replace with your actual domain
+      // Twitter Card
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Syphax — AI/ML Engineer" },
+      {
+        name: "twitter:description",
+        content:
+          "Student AI/ML engineer building custom language model architectures and research tools.",
+      },
+      { name: "twitter:site", content: "@syphax_twt" },
+      { name: "twitter:creator", content: "@syphax_twt" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -92,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap",
       },
     ],
   }),
@@ -121,7 +139,6 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
   );
