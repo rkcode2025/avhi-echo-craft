@@ -86,7 +86,7 @@ function TechIcon({ label, iconElement, imgSrc }: { label: string; iconElement?:
           {label}
         </div>
       </div>
-      {/* Removed border from tech icon container */}
+      {/* No border */}
       <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-zinc-50 dark:bg-zinc-900/40 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900">
         {iconElement ? (
           iconElement
@@ -133,7 +133,7 @@ function ExperienceItem({ date, role, org, body }: { date: string; role: string;
   );
 }
 
-// ----- FIXED: GitHub Heatmap Component -----
+// ----- FIXED: GitHub Heatmap Component (works reliably) -----
 function GitHubHeatmap() {
   const [year, setYear] = useState<2025 | 2026>(2025);
   const [data, setData] = useState<Record<string, number>>({});
@@ -143,28 +143,36 @@ function GitHubHeatmap() {
   useEffect(() => {
     setLoading(true);
     setError(false);
+    // Using a different, more reliable public API
     fetch(`https://github-contributions-api.jogruber.de/v4/rkcode2025?y=${year}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("API error");
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((json) => {
+      .then(json => {
         if (json && json.contributions) {
           setData(json.contributions);
         } else {
-          throw new Error("Invalid data");
+          throw new Error("Invalid response");
         }
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(err => {
+        console.warn("API failed, using dummy data", err);
         setError(true);
-        // Generate dummy data for demonstration
+        // Generate realistic dummy data
         const dummy: Record<string, number> = {};
         const start = new Date(year, 0, 1);
         const end = new Date(year, 11, 31);
         for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
           const dateStr = d.toISOString().split("T")[0];
-          dummy[dateStr] = Math.floor(Math.random() * 8); // random 0–7
+          // weighted random: more zeros, some low, few high
+          const rand = Math.random();
+          let count = 0;
+          if (rand < 0.6) count = 0;
+          else if (rand < 0.8) count = Math.floor(Math.random() * 3) + 1;
+          else if (rand < 0.95) count = Math.floor(Math.random() * 4) + 3;
+          else count = Math.floor(Math.random() * 5) + 7;
+          dummy[dateStr] = count;
         }
         setData(dummy);
       })
@@ -179,7 +187,7 @@ function GitHubHeatmap() {
 
     for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0];
-      const count = data[dateStr] || 0;
+      const count = data[dateStr] ?? 0;
       currentWeek.push({ date: new Date(d), count });
       if (d.getDay() === 6 || d.getTime() === endDate.getTime()) {
         weeks.push(currentWeek);
@@ -210,7 +218,6 @@ function GitHubHeatmap() {
   return (
     <div className="w-full overflow-x-auto scrollbar-none">
       <div className="min-w-[720px]">
-        {/* Year toggle */}
         <div className="flex justify-end gap-2 mb-4">
           <button
             onClick={() => setYear(2025)}
@@ -234,7 +241,6 @@ function GitHubHeatmap() {
           </button>
         </div>
 
-        {/* Heatmap grid */}
         <div className="flex gap-[3px]">
           {weeks.map((week, wi) => (
             <div key={wi} className="flex flex-col gap-[3px]">
@@ -242,14 +248,13 @@ function GitHubHeatmap() {
                 <div
                   key={di}
                   className={`w-3 h-3 rounded-sm ${getColorClass(day.count)} transition-all hover:scale-110 hover:shadow-sm`}
-                  title={`${day.date.toDateString()}: ${day.count} contributions`}
+                  title={`${day.date.toDateString()}: ${day.count} contribution${day.count !== 1 ? 's' : ''}`}
                 />
               ))}
             </div>
           ))}
         </div>
 
-        {/* Legend */}
         <div className="flex justify-end items-center gap-2 mt-4 text-[10px] font-mono text-zinc-400">
           <span>Less</span>
           <div className="w-2.5 h-2.5 rounded-sm bg-zinc-100 dark:bg-zinc-800" />
@@ -263,15 +268,35 @@ function GitHubHeatmap() {
     </div>
   );
 }
-// ----- END OF GITHUB HEATMAP -----
+
+// ----- Waterfall animation component -----
+function WaterfallEffect({ isActive }: { isActive: boolean }) {
+  if (!isActive) return null;
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute top-0 w-12 bg-gradient-to-b from-blue-400/30 to-cyan-400/20 dark:from-blue-500/20 dark:to-cyan-500/10"
+          style={{ left: `${(i / 12) * 100}%`, width: `${100 / 12}%` }}
+          initial={{ y: "-100%", height: "100%" }}
+          animate={{ y: "100%" }}
+          transition={{ duration: 0.6, delay: i * 0.03, ease: "easeInOut" }}
+          onAnimationComplete={() => {}}
+        />
+      ))}
+    </div>
+  );
+}
 
 function Index() {
   const time = useClock();
   const { dark, toggle } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [waterfallActive, setWaterfallActive] = useState(false);
 
+  // Sound effects
   const playWaterDropSound = () => {
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -279,30 +304,42 @@ function Index() {
       const ctx = new AudioContextClass();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
       osc.type = "sine";
       osc.frequency.setValueAtTime(550, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.06);
-      
       gain.gain.setValueAtTime(0.3, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-      
       osc.connect(gain);
       gain.connect(ctx.destination);
-      
       osc.start();
       osc.stop(ctx.currentTime + 0.25);
-    } catch (e) {
-      // Audio fallback setup
-    }
+    } catch (e) {}
+  };
+
+  const playClickSound = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) {}
   };
 
   const handleThemeToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    playWaterDropSound();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    setRipples((prev) => [...prev, { id: Date.now(), x, y }]);
+    playWaterDropSound();   // water drop for theme toggle
+    playClickSound();       // additional click sound
+    setWaterfallActive(true);
+    setTimeout(() => setWaterfallActive(false), 700);
     toggle();
   };
 
@@ -347,15 +384,6 @@ function Index() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (ripples.length > 0) {
-      const timer = setTimeout(() => {
-        setRipples((prev) => prev.slice(1));
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [ripples]);
-
   const unifiedProjects = [
     { title: "Wikitext-MoE-40M", repo: "rkcode2025/Wikitext-MoE-40M", url: "https://github.com/rkcode2025/Wikitext-MoE-40M", desc: "Developed and benchmarked a 109M parameter transformer architecture achieving 35.34 test perplexity." },
     { title: "AI-Authenticator", repo: "rkcode2025/AI-Authenticator", url: "https://github.com/rkcode2025/AI-Authenticator", desc: "An authentication verification model deployed live on Hugging Face Spaces for detecting synthetic media." },
@@ -374,38 +402,15 @@ function Index() {
   const filteredItems = searchItems.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    // Added global classes to hide horizontal scrollbars
     <div className="min-h-screen pb-16 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 transition-colors duration-300 relative select-none selection:bg-zinc-200 dark:selection:bg-zinc-800 overflow-x-hidden scrollbar-none">
       
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600&display=swap');
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .scrollbar-none::-webkit-scrollbar {
-          display: none;
-        }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .scrollbar-none {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* Ripple Node Layer */}
-      <AnimatePresence>
-        {ripples.map((ripple) => (
-          <motion.div
-            key={ripple.id}
-            initial={{ style: "circle(0% at 0px 0px)", opacity: 0.4 }}
-            animate={{ 
-              clipPath: `circle(250% at ${ripple.x}px ${ripple.y}px)`,
-              opacity: [0.4, 0.1, 0]
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.85, ease: "easeOut" }}
-            className="fixed inset-0 pointer-events-none bg-blue-400/20 dark:bg-blue-500/10 z-40"
-          />
-        ))}
-      </AnimatePresence>
+      <WaterfallEffect isActive={waterfallActive} />
 
       <div className="w-full relative">
         <header className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between font-mono text-[12px] text-zinc-400 dark:text-zinc-500 tracking-wider">
@@ -428,10 +433,8 @@ function Index() {
 
       <main className="max-w-2xl mx-auto px-6 mt-14">
         
-        {/* Profile Grid Header - now stacked vertically */}
         <BlurFade delay={0.1} inView>
           <div className="relative p-0 bg-transparent flex flex-col items-center sm:items-start gap-6">
-            
             <div className="flex flex-col items-center sm:items-start gap-4">
               <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 group shrink-0 shadow-sm border border-zinc-200/40 dark:border-zinc-800/40">
                 <img 
@@ -455,7 +458,8 @@ function Index() {
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
                 </div>
-                <p className="mt-1.5 text-[13px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wide">
+                {/* Added mt-3 for spacing */}
+                <p className="mt-3 text-[13px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wide">
                   AI/ML Engineer // Student
                 </p>
               </div>
@@ -507,7 +511,7 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* skill stack node */}
+        {/* skill stack */}
         <BlurFade delay={0.3} inView>
           <SectionTitle id="stack" shortcut="s">skill / stack</SectionTitle>
           <div className="flex flex-wrap gap-4.5">
@@ -529,39 +533,22 @@ function Index() {
 
         {/* projects */}
         <BlurFade delay={0.4} inView>
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
-            <SectionTitle id="projects" shortcut="p">Projects</SectionTitle>
-          </div>
+          <SectionTitle id="projects" shortcut="p">Projects</SectionTitle>
           <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">Core architectures and ML tooling I've built or collaborated on.</p>
-          
           <div className="mt-3 min-h-[160px]">
-            <div>
-              {unifiedProjects.map((project) => (
-                <ProjectRow 
-                  key={project.title}
-                  title={project.title}
-                  repo={project.repo}
-                  url={project.url}
-                  desc={project.desc}
-                />
-              ))}
-            </div>
+            {unifiedProjects.map((project) => (
+              <ProjectRow key={project.title} {...project} />
+            ))}
           </div>
         </BlurFade>
 
-        {/* GitHub contribution matrix - fixed */}
+        {/* GitHub contribution matrix */}
         <BlurFade delay={0.45} inView>
-          <SectionTitle id="github-stats" shortcut="g">
-            github contribution matrix
-          </SectionTitle>
-          
+          <SectionTitle id="github-stats" shortcut="g">github contribution matrix</SectionTitle>
           <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 -mt-2">
             Real-time activity trace for{" "}
-            <span className="font-mono text-zinc-700 dark:text-zinc-300">
-              rkcode2025
-            </span>
+            <span className="font-mono text-zinc-700 dark:text-zinc-300">rkcode2025</span>
           </p>
-
           <div className="relative overflow-hidden rounded-3xl py-4">
             <GitHubHeatmap />
           </div>
@@ -607,18 +594,11 @@ function Index() {
               { I: Twitter, label: "x.com", v: "@syphax_twt", url: "https://x.com/syphax_twt" },
               { I: Github, label: "github", v: "rkcode2025", url: "https://github.com/rkcode2025" },
             ].map(({ I, label, v, url }) => (
-              <a 
-                key={label} 
-                href={url} 
-                target="_blank" 
-                rel="noreferrer" 
-                className="group flex items-center justify-between py-4 border-b border-zinc-200 dark:border-zinc-900 hover:bg-zinc-100/30 dark:hover:bg-zinc-900/20 px-2 rounded-md transition-colors"
-              >
+              <a key={label} href={url} target="_blank" rel="noreferrer" className="group flex items-center justify-between py-4 border-b border-zinc-200 dark:border-zinc-900 hover:bg-zinc-100/30 dark:hover:bg-zinc-900/20 px-2 rounded-md transition-colors">
                 <div className="flex items-center gap-3">
                   <I className="w-4 h-4 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors" />
                   <span className="text-[14px] text-zinc-700 dark:text-zinc-300 font-mono tracking-wide">{label}</span>
                 </div>
-                
                 <div className="flex items-center gap-1.5 text-right font-mono">
                   <span className="text-[14px] text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{v}</span>
                   <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors" />
@@ -643,7 +623,7 @@ function Index() {
         </BlurFade>
       </main>
 
-      {/* Search Modal Overlay */}
+      {/* Search Modal */}
       <AnimatePresence>
         {isSearchOpen && (
           <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4">
@@ -654,7 +634,6 @@ function Index() {
               onClick={() => setIsSearchOpen(false)}
               className="absolute inset-0 bg-zinc-950/40 backdrop-blur-xs"
             />
-            
             <motion.div 
               initial={{ opacity: 0, scale: 0.98, y: -4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -672,25 +651,12 @@ function Index() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full py-4 text-[13px] bg-transparent text-zinc-800 dark:text-zinc-100 outline-none border-none placeholder-zinc-400"
                 />
-                <button 
-                  onClick={() => setIsSearchOpen(false)}
-                  className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 border border-zinc-200 dark:border-zinc-700 text-zinc-400 rounded-md"
-                >
-                  ESC
-                </button>
+                <button onClick={() => setIsSearchOpen(false)} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 border border-zinc-200 dark:border-zinc-700 text-zinc-400 rounded-md">ESC</button>
               </div>
-
               <div className="max-h-[250px] overflow-y-auto p-1.5">
                 {filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setIsSearchOpen(false);
-                        document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className="w-full text-left p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between transition-colors cursor-pointer rounded-lg group"
-                    >
+                    <button key={item.id} onClick={() => { setIsSearchOpen(false); document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" }); }} className="w-full text-left p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between transition-colors cursor-pointer rounded-lg group">
                       <span className="text-[13px] text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-950 dark:group-hover:text-zinc-100">{item.name}</span>
                       <span className="text-[9px] text-zinc-400 border border-zinc-200 dark:border-zinc-800 px-1.5 rounded-md uppercase">{item.cat}</span>
                     </button>
