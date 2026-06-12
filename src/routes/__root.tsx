@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Student AI/ML engineer building custom language model architectures and research tools.",
       },
       { name: "author", content: "Syphax" },
-      // Open Graph (Facebook, LinkedIn, Discord etc.)
+      // Open Graph
       { property: "og:title", content: "Syphax — AI/ML Engineer" },
       {
         property: "og:description",
@@ -92,15 +92,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Student AI/ML engineer building custom language model architectures and research tools.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://yourdomain.com" }, // ← replace with your actual domain
+      { property: "og:url", content: "https://yourdomain.com" }, // ← replace with your real domain
+      { property: "og:site_name", content: "Syphax" },
+      { property: "og:image", content: "https://yourdomain.com/og-image.jpg" }, // ← your image URL
       // Twitter Card
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Syphax — AI/ML Engineer" },
       {
         name: "twitter:description",
         content:
           "Student AI/ML engineer building custom language model architectures and research tools.",
       },
+      { name: "twitter:image", content: "https://yourdomain.com/og-image.jpg" },
       { name: "twitter:site", content: "@syphax_twt" },
       { name: "twitter:creator", content: "@syphax_twt" },
     ],
