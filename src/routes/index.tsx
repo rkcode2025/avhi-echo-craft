@@ -406,7 +406,7 @@ function Index() {
           </div>
         </BlurFade>
 
-         <BlurFade delay={0.45} inView>
+        <BlurFade delay={0.45} inView>
            <SectionTitle id="github-stats" shortcut="g">
              github contribution matrix
            </SectionTitle>
@@ -423,36 +423,33 @@ function Index() {
                 relative
                 overflow-hidden
                 rounded-3xl
-                bg-zinc-100/80
+                bg-white
                 dark:bg-zinc-900/50
                 backdrop-blur-xl
                 px-8
                 py-8
               "
             >
-    
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5 pointer-events-none"
-      />
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
 
-    <div className="relative flex justify-center overflow-x-auto scrollbar-none">
-      <img
-        src="https://ghchart.rshah.org/rkcode2025"
-        alt="GitHub Contributions"
-        className="
-          w-full
-          max-w-5xl
-          min-w-[720px]
-          h-auto
-          select-none
-          dark:invert
-          dark:hue-rotate-180
-          dark:contrast-125
-        "
-        draggable={false}
-      />
-    </div>
-  </div>
-</BlurFade>
+              <div className="relative flex justify-center overflow-x-auto scrollbar-none">
+                <img
+                  src="https://ghchart.rshah.org/rkcode2025"
+                  alt="GitHub Contributions"
+                  className="
+                    w-full
+                    max-w-5xl
+                    min-w-[720px]
+                    h-auto
+                    select-none
+                    dark:brightness-[0.9]
+                    dark:contrast-[1.1]
+                  "
+                  draggable={false}
+                />
+              </div>
+          </div>
+        </BlurFade>
 
         {/* experience */}
         <BlurFade delay={0.5} inView>
