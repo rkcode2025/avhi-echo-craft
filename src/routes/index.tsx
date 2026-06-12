@@ -2,13 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Search, Clock, ArrowUpRight,
-  Mail, Sun, Moon, Github, Twitter, Send, Linkedin, Youtube,
+  Mail, Sun, Moon, Github, Twitter, BookOpen
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Syphax — full-stack engineer" },
+      { title: "Syphax — AI/ML Engineer" },
       { name: "description", content: "Personal site of Syphax." },
     ],
   }),
@@ -72,30 +72,29 @@ function TechCircle({ label, bg, fg }: { label: string; bg: string; fg: string }
   );
 }
 
-function PRRow({ title, repo, num }: { title: string; repo: string; num: string }) {
+function ProjectRow({ title, repo, url, desc }: { title: string; repo: string; url: string; desc: string }) {
   return (
-    <a className="group flex items-start justify-between gap-4 py-3.5 border-t border-border first:border-t-0 hover:bg-accent/50 -mx-2 px-2 rounded-md transition" href="#">
-      <div>
-        <div className="text-[14px] text-foreground/90 group-hover:text-foreground">{title}</div>
-        <div className="mt-1.5 flex items-center gap-2 text-[12px] text-muted-foreground font-mono">
-          <span>{repo}</span>
-          <span>•</span>
-          <span>{num}</span>
-          <span>•</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-badge text-badge-foreground text-[10px] tracking-wider">MERGED</span>
+    <a className="group flex flex-col gap-1.5 py-4 border-t border-border first:border-t-0 hover:bg-accent/50 -mx-2 px-2 rounded-md transition" href={url} target="_blank" rel="noreferrer">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[14px] font-medium text-foreground/90 group-hover:text-foreground">{title}</div>
+          <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground font-mono">
+            <span>{repo}</span>
+          </div>
         </div>
+        <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mt-1" />
       </div>
-      <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mt-1" />
+      <p className="text-[13px] text-muted-foreground leading-relaxed mt-1">{desc}</p>
     </a>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <a href="#" className="flex flex-col gap-1.5 border border-border rounded-lg p-4 hover:bg-accent/40 transition">
+    <div className="flex flex-col gap-1.5 border border-border rounded-lg p-4 hover:bg-accent/40 transition">
       <div className="text-[12px] text-muted-foreground">{label}</div>
       <div className="text-xl">{value}</div>
-    </a>
+    </div>
   );
 }
 
@@ -122,13 +121,12 @@ function ExperienceItem({
 function Index() {
   const time = useClock();
   const { dark, toggle } = useTheme();
-  const [tab, setTab] = useState<"prs" | "projects">("prs");
 
   return (
     <div className="min-h-screen pb-16 text-[14px]">
       {/* top bar */}
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between font-mono text-[12px] text-muted-foreground tracking-wider">
-        <div>EST. 2023</div>
+        <div>EST. 2026</div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
@@ -165,58 +163,50 @@ function Index() {
         </div>
 
         <p className="mt-2 text-[14px] text-muted-foreground">
-          AI/ML engineer // Student{" "}
-          <a href="#" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
-            <span className="w-3 h-3 rounded-full bg-foreground inline-block" /> ordr.trade
-          </a>
+          AI/ML Engineer // Student
         </p>
 
         <p className="mt-5 text-[14px] leading-relaxed text-foreground/90">
-          I'm a Student with a keen interest in AI/Ml engineering and research. I wish to contribute to
-          core infrastructure, including new designs for language models.
+          I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to
+          core infrastructure, including implementing custom designs for language models.
         </p>
         <p className="mt-3 text-[14px] leading-relaxed text-foreground/90">
-          currently diving into deep learning and transformer models.
+          I’m driven by the desire to build things that make an impact.
+          Currently diving into deep learning, NLP, and transformer architecture.
         </p>
 
         {/* skills */}
         <SectionTitle>skill / stack</SectionTitle>
         <div className="flex flex-wrap gap-2.5">
           <TechCircle label="PY" bg="#3776AB" fg="#fff" />
-          <TechCircle label="SK" bg="#F7931E" fg="#fff" />
-          <TechCircle label="TF" bg="#FF6F00" fg="#fff" />
           <TechCircle label="PT" bg="#EE4C2C" fg="#fff" />
           <TechCircle label="HF" bg="#FFD21E" fg="#000" />
-          <TechCircle label="VC" bg="#000000" fg="#fff" />
+          <TechCircle label="MoE" bg="#000000" fg="#fff" />
+          <TechCircle label="3D" bg="#8892BF" fg="#fff" />
         </div>
 
         {/* featured work */}
-        <SectionTitle>featured work</SectionTitle>
-        <p className="text-[13px] text-muted-foreground">selected highlights from my contributions and projects</p>
-        <div className="mt-3 inline-flex p-0.5 rounded-md border border-border bg-muted/60 text-[12.5px]">
-          <button
-            onClick={() => setTab("prs")}
-            className={`px-3 py-1 rounded transition ${tab === "prs" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-          >pull requests</button>
-          <button
-            onClick={() => setTab("projects")}
-            className={`px-3 py-1 rounded transition ${tab === "projects" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-          >projects</button>
-        </div>
+        <SectionTitle>Projects</SectionTitle>
+        <p className="text-[13px] text-muted-foreground mb-4">Core architectures and ML tooling I've built or collaborated on.</p>
         <div className="mt-3">
-          {tab === "prs" ? (
-            <>
-              <PRRow title="remove deprecated udp tpu socket bindings" repo="anza-xyz/agave" num="#9291" />
-              <PRRow title="feat: impl inner instructions tracking behind feature flag" repo="anza-xyz/mollusk" num="#184" />
-              <PRRow title="feat: add default keypair option for keypair path input" repo="blueshift-gg/Scilla" num="#79" />
-            </>
-          ) : (
-            <>
-              <PRRow title="ordr.trade — fully onchain clob" repo="ordrtrade/core" num="v0.4" />
-              <PRRow title="pinocchio playground" repo="syphax/pinocchio-pg" num="v0.1" />
-              <PRRow title="solana protocol notes" repo="syphax/sol-notes" num="docs" />
-            </>
-          )}
+          <ProjectRow 
+            title="Wikitext-MoE-40M" 
+            repo="rkcode2025/Wikitext-MoE-40M" 
+            url="https://github.com/rkcode2025/Wikitext-MoE-40M"
+            desc="Developed and benchmarked a 109M parameter transformer model achieving a 35.34 test perplexity." 
+          />
+          <ProjectRow 
+            title="XTRAIN" 
+            repo="MangalanLabs/XTRAIN" 
+            url="https://github.com/MangalanLabs/XTRAIN"
+            desc="A collaborative CPU training framework built on an original model design. Specifically led the development of the LMV model specializing in mathematics." 
+          />
+          <ProjectRow 
+            title="AI-Authenticator" 
+            repo="rkcode2025/AI-Authenticator" 
+            url="https://github.com/rkcode2025/AI-Authenticator"
+            desc="A deployed authentication tool for detecting AI-generated images, hosted live on Hugging Face Spaces." 
+          />
         </div>
 
         {/* proof of work */}
@@ -230,61 +220,27 @@ function Index() {
 
         {/* experience */}
         <SectionTitle>experience</SectionTitle>
-        <p className="text-[13px] text-muted-foreground">
-          throughout my career, i've worked on cool project/places in the solana ecosystem,
-          from building scalable systems to low-level protocol work. here's a brief overview.
-        </p>
         <div className="mt-3">
           <ExperienceItem
-            date="mar 2026 — now"
-            role="co-founder"
-            org="ordr.trade"
-            body="fully onchain clob on solana. drove a create_market refactor moving 6 cpis client side (~82% cu reduction). rewrote hotpaths in sbf assembly."
-          />
-          <ExperienceItem
-            date="feb 2026 — mar 2026"
-            role="security bootcamp student"
-            org="rektoff"
-            body="selected as one of 125 students for the solana rust security bootcamp. covered exploit patterns, fuzzing, and audit methodology."
-          />
-          <ExperienceItem
-            date="feb 2025 — now"
-            role="member / 3x grant recipient"
-            org="superteam"
-            body="active member of superteam, contributing to the solana ecosystem through projects, collaborations, and community initiatives."
-          />
-          <ExperienceItem
-            date="aug 2024 — now"
-            role="brand ambassador"
-            org="project athena"
-            body="brand ambassador for project athena. representing the community and driving growth."
-          />
-          <ExperienceItem
-            date="may 2025 — nov 2025"
-            role="full stack solana engineer"
-            org="piratecrew.fun"
-            body="led meteora infra integrations, built complex backend systems, and shipped end-to-end mainnet smart contract integrations."
-          />
-          <ExperienceItem
-            date="various dates"
-            role="cohort student"
-            org="solana turbin3"
-            body="part of builder, advanced svm, accel cohorts. explored solana's architecture deeply, understanding the runtime, sealevel parallelization, and low-level mechanics of the chain."
+            date="nov 2025 — may 2026"
+            role="AI/ML Intern & Engineer"
+            org="Manglan Labs"
+            body="Worked collaboratively with a research group to design, research, and implement new small-sized model architectures."
           />
         </div>
 
-        {/* writings */}
-        <SectionTitle>writings</SectionTitle>
+        {/* recent reads */}
+        <SectionTitle>recent reads</SectionTitle>
+        <p className="text-[13px] text-muted-foreground mb-4">Research papers and insights I am currently exploring.</p>
         <div className="grid md:grid-cols-3 gap-2.5">
           {[
-            { d: "29/11/25", t: "why agave moved to quic: not the 'best' protocol, ...", m: "2 m" },
-            { d: "26/11/25", t: "understanding quic: the simple explanation", m: "4 m" },
-            { d: "25/07/25", t: "pinocchio: the no-dependency framework for solana ...", m: "3 m" },
+            { d: "Research", t: "Efficient Estimation of Word Representations in Vector Space", href: "#reads" },
+            { d: "Research", t: "Attention Is All You Need: Fundamentals of Transformers", href: "#reads" },
+            { d: "Research", t: "Outrageously Large Neural Networks: Sparsely-Gated MoE", href: "#reads" },
           ].map((w) => (
-            <a key={w.t} href="#" className="border border-border rounded-lg p-3.5 hover:bg-accent/40 transition flex flex-col gap-2">
-              <div className="font-mono text-[11px] text-muted-foreground">{w.d}</div>
+            <a key={w.t} href={w.href} className="border border-border rounded-lg p-3.5 hover:bg-accent/40 transition flex flex-col gap-2">
+              <div className="font-mono text-[11px] text-muted-foreground flex items-center gap-1.5"><BookOpen className="w-3 h-3"/> {w.d}</div>
               <div className="text-[13.5px] leading-snug">{w.t}</div>
-              <div className="font-mono text-[11px] text-muted-foreground mt-auto">{w.m}</div>
             </a>
           ))}
         </div>
@@ -293,14 +249,11 @@ function Index() {
         <SectionTitle>contact</SectionTitle>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
           {[
-            { I: Mail, label: "email", v: "hi@syphax.dev" },
-            { I: Twitter, label: "x.com", v: "@syphax" },
-            { I: Send, label: "telegram", v: "@syphax" },
-            { I: Github, label: "github", v: "@syphax" },
-            { I: Linkedin, label: "linkedin", v: "/in/syphax" },
-            { I: Youtube, label: "youtube", v: "@syphax" },
-          ].map(({ I, label, v }) => (
-            <a key={label} href="#" className="flex items-center gap-2.5 border border-border rounded-lg p-3 hover:bg-accent/40 transition">
+            { I: Mail, label: "email", v: "syphaxtwt2025@gmail.com", url: "mailto:syphaxtwt2025@gmail.com" },
+            { I: Twitter, label: "x.com", v: "@syphax_twt", url: "https://x.com/syphax_twt" },
+            { I: Github, label: "github", v: "rkcode2025", url: "https://github.com/rkcode2025" },
+          ].map(({ I, label, v, url }) => (
+            <a key={label} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 border border-border rounded-lg p-3 hover:bg-accent/40 transition">
               <I className="w-4 h-4 text-muted-foreground" />
               <div className="flex flex-col">
                 <span className="text-[11px] text-muted-foreground">{label}</span>
