@@ -209,15 +209,6 @@ function Index() {
           />
         </div>
 
-        {/* proof of work */}
-        <SectionTitle>proof of work</SectionTitle>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          <StatCard label="projects" value="19" />
-          <StatCard label="core contributions" value="48" />
-          <StatCard label="community" value="4" />
-          <StatCard label="hackathons" value="1" />
-        </div>
-
         {/* experience */}
         <SectionTitle>experience</SectionTitle>
         <div className="mt-3">
