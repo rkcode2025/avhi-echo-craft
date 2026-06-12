@@ -351,7 +351,7 @@ function Index() {
             </div>
             {/* Magic UI Animated Theme Toggler */}
             <div className="absolute top-0 right-0">
-              <AnimatedThemeToggler />
+              <AnimatedThemeToggler dark={dark} toggle={toggle} />
             </div>
           </div>
         </BlurFade>
