@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
-import { Search, ArrowUpRight, Mail, Sun, Moon, BookOpen } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Search, Clock, ArrowUpRight,
+  Mail, Sun, Moon, Github, Twitter, BookOpen, Key
+} from "lucide-react";
+import { BlurFade } from "@/components/ui/blur-fade";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/")({
@@ -13,8 +17,27 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// Full-Viewport Circle Theme Overlay Hook
+function useClock() {
+  const [t, setT] = useState("");
+  useEffect(() => {
+    const fmt = () => {
+      const d = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const offMin = -d.getTimezoneOffset();
+      const sign = offMin >= 0 ? "+" : "-";
+      const oh = pad(Math.floor(Math.abs(offMin) / 60));
+      const om = pad(Math.abs(offMin) % 60);
+      setT(`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} GMT${sign}${oh}:${om}`);
+    };
+    fmt();
+    const id = setInterval(fmt, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return t;
+}
+
 function useTheme() {
+  // Checks localStorage, defaults to true (dark mode) if not set
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -34,577 +57,380 @@ function useTheme() {
     }
   }, [dark]);
 
-  return { dark, setDark };
+  return { dark, toggle: () => setDark((d) => !d) };
 }
 
-interface SearchItem {
-  id: string;
-  title: string;
-  type: string;
-  desc?: string;
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="font-mono inline-flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-[11px] text-zinc-500 dark:text-zinc-400">
+      {children}
+    </kbd>
+  );
 }
 
-interface GitHubContributionDay {
-  date: string;
-  count: number;
-  level: number;
+function SectionTitle({ children, id }: { children: React.ReactNode; id: string }) {
+  const scrollToSection = () => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return (
+    <div id={id} className="font-mono flex items-center gap-2 text-[15px] tracking-widest uppercase text-zinc-700 dark:text-zinc-300 font-medium mt-16 mb-6 group">
+      <span>{children}</span>
+      <button 
+        onClick={scrollToSection}
+        className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-900"
+        title={`Scroll to ${children}`}
+      >
+        <Key className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
+      </button>
+    </div>
+  );
+}
+
+// Interactive SVG Tech Icons with Tooltips on Top
+function TechIcon({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="relative group flex flex-col items-center">
+      {/* Tooltip on Top */}
+      <div className="absolute bottom-full mb-2 flex flex-col items-center pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-30">
+        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-md px-2.5 py-1 text-[11px] font-mono font-bold tracking-wider text-zinc-700 dark:text-zinc-300 shadow-sm whitespace-nowrap">
+          {label}
+        </div>
+      </div>
+      
+      {/* Icon frame */}
+      <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-zinc-400 dark:group-hover:border-zinc-700 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ProjectRow({ title, repo, url, desc }: { title: string; repo: string; url: string; desc: string }) {
+  return (
+    <a className="group flex flex-col gap-1.5 py-5 border-t border-zinc-200 dark:border-zinc-800 first:border-t-0 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 -mx-3 px-3 rounded-lg transition-all duration-200" href={url} target="_blank" rel="noreferrer">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[14px] font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">{title}</div>
+          <div className="mt-1 flex items-center gap-2 text-[12px] text-zinc-500 dark:text-zinc-500 font-mono">
+            <span>{repo}</span>
+          </div>
+        </div>
+        <ArrowUpRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 shrink-0 mt-1 transition-colors" />
+      </div>
+      <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">{desc}</p>
+    </a>
+  );
+}
+
+function ExperienceItem({
+  date, role, org, body,
+}: { date: string; role: string; org: string; body: string }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-2 md:gap-6 py-6 border-t border-zinc-200 dark:border-zinc-800 first:border-t-0">
+      <div className="font-mono text-[12px] text-zinc-400 dark:text-zinc-500 pt-0.5">{date}</div>
+      <div>
+        <h3 className="text-[14px] flex items-center gap-2 flex-wrap text-zinc-800 dark:text-zinc-200 font-medium">
+          <span>{role}</span>
+          <span className="inline-flex items-center gap-1 text-zinc-600 dark:text-zinc-400 text-[13px]">
+            <span className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-[9px]">◎</span>
+            <span>{org}</span>
+          </span>
+        </h3>
+        <p className="mt-2 text-[13.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">{body}</p>
+      </div>
+    </div>
+  );
 }
 
 function Index() {
-  const { dark, setDark } = useTheme();
-  const [activeYear, setActiveYear] = useState<string>("2026");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [githubData, setGithubData] = useState<GitHubContributionDay[]>([]);
-  const [totalContributions, setTotalContributions] = useState<number>(1481);
-  
-  const [ripple, setRipple] = useState<{ x: number; y: number; visible: boolean; targetDark: boolean } | null>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
+  const time = useClock();
+  const { dark, toggle } = useTheme();
+  const [activeYear, setActiveYear] = useState<"2026" | "2025">("2026");
 
-  // Search Index Data
-  const searchItems: SearchItem[] = [
-    { id: "hero", title: "Overview / Bio", type: "Section" },
-    { id: "stack", title: "Skill / Tech Stack", type: "Section", desc: "Python, PyTorch, TensorFlow, Scikit-Learn, Hugging Face" },
-    { id: "projects", title: "Projects", type: "Section", desc: "Wikitext-MoE-40M, AI-Authenticator, XTRAIN" },
-    { id: "experience", title: "Experience", type: "Section", desc: "Mangalan Labs AI/ML Intern" },
-    { id: "github-graph", title: "GitHub Activity Graph", type: "Section", desc: "Annual contribution block heatmaps" },
-    { id: "reads", title: "Recent Reads", type: "Section", desc: "Transformers, Word Representations, MoE research papers" },
-    { id: "contact", title: "Contact Information", type: "Section", desc: "Email, X.com, GitHub links" },
-  ];
-
-  // Fetch real GitHub contributions live from user account
-  useEffect(() => {
-    async function fetchContributions() {
-      try {
-        const res = await fetch(`https://github-contributions-api.deno.dev/rkcode2025/v1/${activeYear}`);
-        if (!res.ok) throw new Error("API fallback needed");
-        const data = await res.json();
-        if (data && data.contributions) {
-          setGithubData(data.contributions);
-          setTotalContributions(data.total?.[activeYear] || data.totalCount || 1481);
-        }
-      } catch (err) {
-        // Fallback generator mimicking realistic rkcode2025 data patterns if scraper fails or matches rate limits
-        const yearNum = parseInt(activeYear);
-        const days = yearNum % 4 === 0 ? 366 : 365;
-        const mockContributions: GitHubContributionDay[] = [];
-        let total = 0;
-        
-        for (let i = 0; i < days; i++) {
-          const pseudoRandom = Math.abs(Math.sin(i * 0.45 + yearNum)) * 100;
-          let count = 0;
-          let level = 0;
-          
-          if (pseudoRandom > 88) { count = 8; level = 4; }
-          else if (pseudoRandom > 70) { count = 5; level = 3; }
-          else if (pseudoRandom > 45) { count = 3; level = 2; }
-          else if (pseudoRandom > 20) { count = 1; level = 1; }
-          
-          total += count;
-          mockContributions.push({
-            date: `2026-01-01`, 
-            count,
-            level
-          });
-        }
-        setGithubData(mockContributions);
-        setTotalContributions(total || 1481);
-      }
-    }
-    fetchContributions();
-  }, [activeYear]);
-
-  // Global Keyboard Shortcuts for Sections & Universal Modal Search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isInput = 
-        document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA" ||
-        document.activeElement?.getAttribute("contenteditable") === "true";
-
-      // Global Search Modals open via direct key 'k' on Windows or Meta/Ctrl + K combos
-      if (!isInput && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
-        return;
-      }
-
-      if (isInput) return;
-
-      const keyMap: Record<string, string> = {
-        h: "hero",
-        s: "stack",
-        p: "projects",
-        e: "experience",
-        g: "github-graph",
-        r: "reads",
-        c: "contact",
-      };
-
-      const targetId = keyMap[e.key.toLowerCase()];
-      if (targetId) {
-        e.preventDefault();
-        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const handleThemeToggleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    const nextDark = !dark;
-
-    setRipple({ x, y, visible: true, targetDark: nextDark });
-    
-    setTimeout(() => setDark(nextDark), 250);
-    setTimeout(() => setRipple(null), 600);
+  // Filterable GitHub project items matching the selected year
+  const githubProjects = {
+    "2026": [
+      { title: "Wikitext-MoE-40M", repo: "rkcode2025/Wikitext-MoE-40M", url: "https://github.com/rkcode2025/Wikitext-MoE-40M", desc: "Developed and benchmarked a 109M parameter transformer architecture achieving 35.34 test perplexity." },
+      { title: "AI-Authenticator", repo: "rkcode2025/AI-Authenticator", url: "https://github.com/rkcode2025/AI-Authenticator", desc: "An authentication verification model deployed live on Hugging Face Spaces for detecting synthetic media." }
+    ],
+    "2025": [
+      { title: "XTRAIN", repo: "MangalanLabs/XTRAIN", url: "https://github.com/MangalanLabs/XTRAIN", desc: "A custom CPU-optimized model-agnostic training framework built from scratch. Spearheaded its mathematics-centric language variant framework." }
+    ]
   };
-
-  const filteredSearchItems = searchItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.desc && item.desc.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const navigateToSection = (id: string) => {
-    setIsSearchOpen(false);
-    setSearchQuery("");
-    setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
-  };
-
-  // Chunk array into standard rows representing weeks (7 items high)
-  const chunkIntoWeeks = (data: GitHubContributionDay[]) => {
-    const weeks: GitHubContributionDay[][] = [];
-    let currentWeek: GitHubContributionDay[] = [];
-    
-    data.forEach((day, index) => {
-      currentWeek.push(day);
-      if (currentWeek.length === 7 || index === data.length - 1) {
-        weeks.push(currentWeek);
-        currentWeek = [];
-      }
-    });
-    return weeks;
-  };
-
-  const contributionWeeks = chunkIntoWeeks(githubData).slice(0, 53);
 
   return (
-    <div className="min-h-screen pb-20 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 transition-colors duration-300 relative overflow-x-hidden selection:bg-zinc-200 dark:selection:bg-zinc-800">
+    <div className="min-h-screen pb-16 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 transition-colors duration-300">
       
-      {/* Visual Canvas Theme Ripple Overlay Layer */}
-      <AnimatePresence>
-        {ripple?.visible && (
-          <motion.div
-            initial={{ 
-              position: "fixed",
-              left: ripple.x,
-              top: ripple.y,
-              translateX: "-50%",
-              translateY: "-50%",
-              width: 1,
-              height: 1,
-              borderRadius: "50%",
-              zIndex: 50,
-              pointerEvents: "none"
-            }}
-            animate={{ scale: 3000 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.55, ease: "easeInOut" }}
-            className={ripple.targetDark ? "bg-zinc-950" : "bg-zinc-50"}
-          />
-        )}
-      </AnimatePresence>
+      {/* Structural Top Accent Lines */}
+      <div className="w-full border-b border-zinc-200/60 dark:border-zinc-900/60 relative">
+        <header className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between font-mono text-[12px] text-zinc-400 dark:text-zinc-500 tracking-wider">
+          <div className="flex items-center gap-1">EST. 2026</div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+              <span>{time || "00:00:00 GMT+00:00"}</span>
+            </div>
+            <button className="flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+              <Search className="w-3.5 h-3.5" />
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </button>
+          </div>
+        </header>
+        <span className="absolute -bottom-[5px] left-4 text-zinc-300 dark:text-zinc-800 font-mono text-[10px] select-none">+</span>
+        <span className="absolute -bottom-[5px] right-4 text-zinc-300 dark:text-zinc-800 font-mono text-[10px] select-none">+</span>
+      </div>
 
-      {/* Main Structural Layout Content Column (No complex side lines/margins) */}
-      <main className="max-w-xl mx-auto px-6 mt-16 relative z-20">
+      <main className="max-w-2xl mx-auto px-6 mt-14">
         
-        {/* Profile Card Header Component Layer (Styled exactly like reference image) */}
-        <div id="hero" className="pb-8 border-b border-zinc-200 dark:border-zinc-900 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {/* Clean Rounded PFP Box Frame with Small Border */}
-            <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs shrink-0">
-              <img 
-                src="https://unavatar.io/twitter/syphax_twt" 
-                alt="Syphax Profile" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <div className="hidden absolute inset-0 grid place-items-center text-xl font-serif font-medium text-zinc-400 dark:text-zinc-500">S</div>
-            </div>
+        {/* Profile Grid / Bounding Box Structure */}
+        <BlurFade delay={0.1} inView>
+          <div className="relative border border-zinc-200 dark:border-zinc-900 rounded-2xl p-6 bg-white/40 dark:bg-zinc-900/10 backdrop-blur-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            
+            {/* Corner Crosshair Decorations */}
+            <span className="absolute -top-1.5 -left-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+            <span className="absolute -top-1.5 -right-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+            <span className="absolute -bottom-2 -left-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+            <span className="absolute -bottom-2 -right-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
 
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[18px] font-medium tracking-tight text-zinc-900 dark:text-zinc-100">
+            <div className="flex items-center gap-5">
+              {/* Profile Frame (Enlarged, clean of status elements) */}
+              <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-inner group cursor-pointer shrink-0">
+                <img 
+                  src="https://unavatar.io/twitter/syphax_twt" 
+                  alt="Syphax" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden absolute inset-0 grid place-items-center text-5xl font-serif font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-900">s</div>
+              </div>
+
+              <div>
+                <h1 className="font-serif text-4xl font-medium tracking-tight text-zinc-800 dark:text-zinc-200">
                   Syphax
-                </span>
-                {/* Verified Account Circle Badge Icon */}
-                <svg className="w-[15px] h-[15px] text-sky-500 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                </svg>
-              </div>
-              
-              {/* Reference Style Context Info Line */}
-              <div className="flex items-center gap-1.5 text-[12px] font-mono text-zinc-400 dark:text-zinc-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-600 inline-block animate-pulse" />
-                <span>Idle · Currently sleeping</span>
+                </h1>
+                <p className="mt-1.5 text-[13.5px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wide">
+                  AI/ML Engineer // Student
+                </p>
               </div>
             </div>
+
+            {/* Micro-interactive Theme Toggle */}
+            <button
+              onClick={toggle}
+              aria-label="toggle theme"
+              className="relative w-10 h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs overflow-hidden cursor-pointer shrink-0"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {dark ? (
+                  <motion.div
+                    key="sun"
+                    initial={{ y: 20, opacity: 0, rotate: -45 }}
+                    animate={{ y: 0, opacity: 1, rotate: 0 }}
+                    exit={{ y: -20, opacity: 0, rotate: 45 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  >
+                    <Sun className="w-4 h-4 text-zinc-400 dark:text-zinc-400" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="moon"
+                    initial={{ y: 20, opacity: 0, rotate: 45 }}
+                    animate={{ y: 0, opacity: 1, rotate: 0 }}
+                    exit={{ y: -20, opacity: 0, rotate: -45 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  >
+                    <Moon className="w-4 h-4 text-zinc-500 dark:text-zinc-500" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
           </div>
+        </BlurFade>
 
-          {/* Theme Toggle Trigger Button Box (Standard roundings applied) */}
-          <button
-            ref={toggleRef}
-            onClick={handleThemeToggleClick}
-            aria-label="Toggle structural theme"
-            className="w-9 h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs cursor-pointer transition-colors relative z-30 shrink-0"
-          >
-            {dark ? <Sun className="w-3.5 h-3.5 text-zinc-400" /> : <Moon className="w-3.5 h-3.5 text-zinc-500" />}
-          </button>
-        </div>
-
-        {/* Shortened Content Overview Statement block */}
-        <div className="mt-6 text-[13px] leading-relaxed text-zinc-500 dark:text-zinc-400 space-y-3">
-          <p>
-            Developer and deep learning researcher building Natural Language Processing systems, custom Transformer matrices, and local computing infrastructure environments.
-          </p>
-        </div>
-
-        {/* Skill / Core Tech Stack Section */}
-        <div id="stack" className="mt-10 pb-8 border-b border-zinc-200 dark:border-zinc-900">
-          <div className="flex items-center justify-between text-[13px] tracking-wider text-zinc-400 dark:text-zinc-500 uppercase font-mono mb-4">
-            <span className="font-normal text-zinc-800 dark:text-zinc-200">Skill / Stack</span>
-            <span className="px-1.5 py-0.5 text-[10px] font-mono border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-md bg-zinc-50 dark:bg-zinc-900/50 lowercase">s</span>
+        {/* bio */}
+        <BlurFade delay={0.2} inView>
+          <div className="space-y-4 mt-10 text-[14px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <p>
+              I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to
+              core infrastructure, including implementing custom designs for language models.
+            </p>
+            <p>
+              I’m driven by the desire to build things that make an impact.
+              Currently diving into deep learning, NLP, and transformer architecture.
+            </p>
           </div>
-          
-          <div className="flex flex-wrap gap-4">
-            {[
-              { 
-                name: "PYTHON", 
-                svg: (
-                  <svg className="w-6 h-6 object-contain" viewBox="0 0 448 512" fill="currentColor">
-                    <path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.7c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-24.9h160.2c29.2 0 53.4-25 53.4-54.2v-97.5c0-15.6-5.4-24.5-5.4-30.4zM279.5 413.4c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15zm-111.4-226.4c7.7 30.9 22.3 54.2 53.4 54.2h40.1v-47.4c0-36.8 31.2-67.8 66.8-67.8h106.8c29.2 0 53.4-25 53.4-54.3V72c0-29-25.2-46-53.4-54.3-33.8-9.9-66.3-11.7-106.8 0C301.6 25.5 275.1 41.2 275.1 72v40.7h106.8v24.9H221.7c-29.2 0-53.4 25-53.4 54.2v97.5c0 15.6 5.4 24.5 5.4 30.4zM168.4 98.6c8.3 0 15 6.7 15 15s-6.7 15-15 15-15-6.7-15-15 6.7-15 15-15z"/>
-                  </svg>
-                )
-              },
-              { 
-                name: "PYTORCH", 
-                svg: (
-                  <svg className="w-6 h-6 object-contain" viewBox="0 0 512 512" fill="#EE4C2C">
-                    <path d="M256 41.6c-48 0-78.4 21.3-95.2 46.1-4.8 7-2 16.7 5.7 19.8l18.4 7.4c6.8 2.7 14.4-.7 17.2-7.5 10.1-24.5 28.2-38.3 53.9-38.3 38.6 0 65.3 27.5 65.3 79.7v18.1c-15.6-13.4-38.9-22.3-64.7-22.3-59.5 0-101.4 42-101.4 105.7 0 63.3 40.7 105.7 100 105.7 32 0 54.7-13.3 66.1-28.9.5 13.9 10 26.1 24.1 27.9l12 1.5c7.9 1 14.8-4.8 14.8-12.8V126.9c0-54.9-42-85.3-98.2-85.3zm31.3 234c0 43.1-24.6 72.8-57.9 72.8-32.3 0-56.1-27.4-56.1-71.1s23.8-72.3 56.1-72.3c33.3 0 57.9 29.2 57.9 70.6v-.1z"/>
-                  </svg>
-                )
-              },
-              { 
-                name: "TENSORFLOW", 
-                svg: (
-                  <svg className="w-6 h-6 object-contain" viewBox="0 0 48 48" fill="none">
-                    <path d="M24 2L4 13.5v23L24 46l20-11.5v-23L24 2z" fill="#FFA000"/>
-                    <path d="M24 2v44l20-11.5v-23L24 2z" fill="#F57C00"/>
-                    <path d="M24 14v16M16 20v-3M32 20v-3" stroke="#fff" strokeWidth="4" strokeLinecap="round"/>
-                  </svg>
-                )
-              },
-              { 
-                name: "SCIKIT-LEARN", 
-                svg: (
-                  <svg className="w-6 h-6 object-contain" viewBox="0 0 100 100">
-                    <path d="M25,50 A20,20 0 1,1 65,50 A20,20 0 1,1 25,50" fill="#F1AA3C" />
-                    <path d="M45,50 A15,15 0 1,1 75,50 A15,15 0 1,1 45,50" fill="#3497CD" opacity="0.8" />
-                    <path d="M35,35 A12,12 0 1,1 59,35 A12,12 0 1,1 35,35" fill="#5CB85C" opacity="0.7" />
-                  </svg>
-                )
-              },
-              { 
-                name: "HUGGINGFACE", 
-                svg: (
-                  <svg className="w-6 h-6 object-contain" viewBox="0 0 100 100" fill="currentColor">
-                    <path d="M50 15c-16.6 0-30 13.4-30 30 0 12.3 7.4 22.8 18 27.3V85h6V74.4c1.9.4 3.9.6 6 .6s4.1-.2 6-.6V85h6V72.3c10.6-4.5 18-15 18-27.3 0-16.6-13.4-30-30-30zm-10 26c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm20 0c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z"/>
-                  </svg>
-                )
-              }
-            ].map((tech) => (
-              <div key={tech.name} className="relative group flex flex-col items-center">
-                {/* Micro Tooltip Capsule on Top view */}
-                <div className="absolute bottom-full mb-1.5 flex flex-col items-center pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-150 transform translate-y-1 group-hover:translate-y-0 z-30">
-                  <div className="bg-zinc-900 dark:bg-zinc-100 rounded-md px-2 py-0.5 text-[9px] font-mono tracking-wider text-zinc-100 dark:text-zinc-900 shadow-sm whitespace-nowrap">
-                    {tech.name}
-                  </div>
-                  <div className="w-1 h-1 bg-zinc-900 dark:bg-zinc-100 rotate-45 -mt-0.5" />
-                </div>
-                
-                {/* Standardized Core Box Frame */}
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900/30 shadow-xs transition-colors duration-200 group-hover:border-zinc-300 dark:group-hover:border-zinc-800">
-                  <div className="text-zinc-700 dark:text-zinc-300 group-hover:scale-105 transition-transform duration-200">
-                    {tech.svg}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </BlurFade>
 
-        {/* Flat Projects Section (Completely standalone clean stream) */}
-        <div id="projects" className="mt-10 pb-8 border-b border-zinc-200 dark:border-zinc-900">
-          <div className="flex items-center justify-between text-[13px] tracking-wider text-zinc-400 dark:text-zinc-500 uppercase font-mono mb-2">
-            <span className="font-normal text-zinc-800 dark:text-zinc-200">Projects</span>
-            <span className="px-1.5 py-0.5 text-[10px] font-mono border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-md bg-zinc-50 dark:bg-zinc-900/50 lowercase">p</span>
-          </div>
-          
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-900/50">
-            {[
-              { title: "Wikitext-MoE-40M", repo: "rkcode2025/Wikitext-MoE-40M", url: "https://github.com/rkcode2025/Wikitext-MoE-40M", desc: "A 109M parameter transformer architecture optimized on wikitext topologies, achieving a benchmarked test perplexity score of 35.34." },
-              { title: "AI-Authenticator (AiAuth)", repo: "rkcode2025/AiAuth", url: "https://huggingface.co/spaces", desc: "Synthetic media authentication platform engineered to spot deepfakes and algorithmic generation signatures, hosted live via Hugging Face Spaces." },
-              { title: "XTRAIN", repo: "MangalanLabs/XTRAIN", url: "https://github.com/MangalanLabs/XTRAIN", desc: "A custom CPU-optimized training runtime architecture written entirely from basic mathematical matrix foundations, omitting third-party optimization dependencies." }
-            ].map((p) => (
-              <a key={p.title} href={p.url} target="_blank" rel="noreferrer" className="group flex flex-col gap-0.5 py-4 block -mx-2 px-2 rounded-xl hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-medium text-zinc-800 dark:text-zinc-200 transition-colors group-hover:text-zinc-950 dark:group-hover:text-zinc-100">{p.title}</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-800 dark:group-hover:text-zinc-300 transition-colors" />
-                </div>
-                <span className="text-[11px] font-mono text-zinc-400 dark:text-zinc-500">{p.repo}</span>
-                <p className="text-[12.5px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">{p.desc}</p>
-              </a>
-            ))}
-          </div>
-        </div>
+        {/* tech logos stack */}
+        <BlurFade delay={0.3} inView>
+          <SectionTitle id="stack">skill / stack</SectionTitle>
+          <div className="flex flex-wrap gap-4.5">
+            {/* Python SVG */}
+            <TechIcon label="PYTHON">
+              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
+                <path d="M11.922 0c-.156.002-.312.015-.466.037L5.056 1.012c-.93.134-1.64.887-1.706 1.823v2.85h3.393V4.316a.434.434 0 0 1 .435-.435h6.786a.434.434 0 0 1 .435.435v2.302H9.288c-.99 0-1.79.802-1.79 1.792v2.816H4.351A2.164 2.164 0 0 0 2.19 13.38v5.526a2.162 2.162 0 0 0 2.16 2.163h2.302v-3.393h1.369a.435.435 0 0 1 .435.435v6.786c0 .6.49 1.091 1.09 1.091h3.1a2.16 2.16 0 0 0 2.163-2.16v-2.852h-3.393V19.67a.435.435 0 0 1 .435-.435h6.786a.435.435 0 0 1 .435.435v-2.302h5.111c.99 0 1.79-.802 1.79-1.792v-2.816h3.147a2.164 2.164 0 0 0 2.161-2.161V5.074A2.162 2.162 0 0 0 19.65 2.91h-2.302v3.393h-1.369a.434.434 0 0 1-.435-.435V.916A1.1 1.1 0 0 0 14.453 0h-2.531zm-2.84 2.13a.627.627 0 1 1 0 1.253.627.627 0 0 1 0-1.253zm5.498 18.423a.627.627 0 1 1 0 1.254.627.627 0 0 1 0-1.254z"/>
+              </svg>
+            </TechIcon>
 
-        {/* Experience Section */}
-        <div id="experience" className="mt-10 pb-8 border-b border-zinc-200 dark:border-zinc-900">
-          <div className="flex items-center justify-between text-[13px] tracking-wider text-zinc-400 dark:text-zinc-500 uppercase font-mono mb-3">
-            <span className="font-normal text-zinc-800 dark:text-zinc-200">Experience</span>
-            <span className="px-1.5 py-0.5 text-[10px] font-mono border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-md bg-zinc-50 dark:bg-zinc-900/50 lowercase">e</span>
+            {/* PyTorch SVG */}
+            <TechIcon label="PYTORCH">
+              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
+                <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm3.89 17.5a1.86 1.86 0 0 1-1.36.56H9.47a1.88 1.88 0 0 1-1.37-.56 2.2 2.2 0 0 1-.53-1.53V9.45a2.22 2.22 0 0 1 .53-1.54 1.88 1.88 0 0 1 1.37-.56h4.51c.54 0 1 .19 1.36.56a2.24 2.24 0 0 1 .54 1.54V16a2.22 2.22 0 0 1-.53 1.5zm-1.12-6.57a1.05 1.05 0 0 0-.74-.28H9.97a1.05 1.05 0 0 0-.74.28 1.2 1.2 0 0 0-.29.87v1.54a1.2 1.2 0 0 0 .29.87 1.05 1.05 0 0 0 .74.28h4.01a1.05 1.05 0 0 0 .74-.28 1.2 1.2 0 0 0 .29-.87V11.8a1.2 1.2 0 0 0-.29-.87z"/>
+              </svg>
+            </TechIcon>
+
+            {/* TensorFlow SVG */}
+            <TechIcon label="TENSORFLOW">
+              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
+                <path d="M12.4 0L3.1 5.4v10.8l9.3 5.4 9.3-5.4V5.4L12.4 0zm7.1 15.1l-7.1 4.1-7.1-4.1V7.1l7.1-4.1 7.1 4.1v8zm-3.6-6.6h-7v1.9h2.3V14h2.3v-3.6h2.4V8.5z"/>
+              </svg>
+            </TechIcon>
+
+            {/* Scikit-Learn SVG */}
+            <TechIcon label="SCIKIT-LEARN">
+              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
+                <path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm1 14.5h-2v-5h2v5zm0-6.5h-2V8h2v2z"/>
+              </svg>
+            </TechIcon>
+
+            {/* Hugging Face SVG */}
+            <TechIcon label="HUGGING FACE">
+              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
+                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 15a5 5 0 0 1-4-2h8a5 5 0 0 1-4 2zm-2.5-6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+              </svg>
+            </TechIcon>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-4 py-2">
-            <span className="font-mono text-[11px] text-zinc-400 dark:text-zinc-500 pt-0.5">2025 — PRESENT</span>
-            <div>
-              <h3 className="text-[14px] text-zinc-800 dark:text-zinc-200 font-medium">
-                AI/ML Architecture Researcher <span className="text-zinc-400 dark:text-zinc-600 font-mono text-[12px]">@ Mangalan Labs</span>
-              </h3>
-              <p className="text-[12.5px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                Co-developing small-scale high-efficiency deep learning pipelines, custom language model tokens matrices, and CPU training matrices.
-              </p>
-            </div>
-          </div>
-        </div>
+        </BlurFade>
 
-        {/* Authentic Dynamic GitHub Contribution Matrix Layout */}
-        <div id="github-graph" className="mt-10 pb-8 border-b border-zinc-200 dark:border-zinc-900">
-          <div className="flex items-center justify-between text-[13px] tracking-wider text-zinc-400 dark:text-zinc-500 uppercase font-mono mb-3">
-            <span className="font-normal text-zinc-800 dark:text-zinc-200">Contribution Matrix</span>
-            <span className="px-1.5 py-0.5 text-[10px] font-mono border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-md bg-zinc-50 dark:bg-zinc-900/50 lowercase">g</span>
-          </div>
-
-          <div className="mt-4 border border-zinc-200 dark:border-zinc-900 rounded-xl bg-white dark:bg-zinc-900/10 p-4">
-            {/* Horizontal Month Identifiers Row */}
-            <div className="flex justify-between text-[10px] font-mono text-zinc-400 dark:text-zinc-500 mb-2 px-0.5">
-              <span>jan</span><span>feb</span><span>mar</span><span>apr</span><span>may</span><span>jun</span>
-              <span>jul</span><span>aug</span><span>sep</span><span>oct</span><span>nov</span><span>dec</span>
-            </div>
-
-            {/* Matrix Square Column Elements Grid */}
-            <div className="flex gap-[2.5px] overflow-x-auto pb-1 scrollbar-none">
-              {contributionWeeks.map((week, wIdx) => (
-                <div key={wIdx} className="flex flex-col gap-[2.5px] shrink-0">
-                  {week.map((day, dIdx) => {
-                    let bgClass = "bg-zinc-100 dark:bg-zinc-900"; 
-                    if (day.level === 1) bgClass = "bg-green-200 dark:bg-green-950/60";
-                    if (day.level === 2) bgClass = "bg-green-300 dark:bg-green-800/60";
-                    if (day.level === 3) bgClass = "bg-green-500 dark:bg-green-600";
-                    if (day.level === 4) bgClass = "bg-green-700 dark:bg-green-400";
-
-                    return (
-                      <div 
-                        key={dIdx} 
-                        className={`w-[9.5px] h-[9.5px] rounded-[2px] transition-colors duration-150 ${bgClass}`} 
-                        title={`${day.count} commits on historical node`}
-                      />
-                    );
-                  })}
-                </div>
+        {/* Featured Work with Interactive GitHub Year Toggle */}
+        <BlurFade delay={0.4} inView>
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
+            <SectionTitle id="projects">Projects</SectionTitle>
+            
+            {/* Year Archive Selector */}
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 rounded-lg text-[12px] font-mono shadow-xs self-start sm:self-auto mb-4 sm:mb-0">
+              {(["2026", "2025"] as const).map((year) => (
+                <button
+                  key={year}
+                  onClick={() => setActiveYear(year)}
+                  className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                    activeYear === year
+                      ? "bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold shadow-xs"
+                      : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400"
+                  }`}
+                >
+                  {year}
+                </button>
               ))}
             </div>
-
-            {/* Metric Footer row */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mt-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-900/50">
-              <span>{totalContributions.toLocaleString()} contributions in {activeYear}</span>
-              <div className="flex items-center gap-1">
-                <span>less</span>
-                <div className="w-2 h-2 rounded-[1px] bg-zinc-100 dark:bg-zinc-900" />
-                <div className="w-2 h-2 rounded-[1px] bg-green-200 dark:bg-green-950" />
-                <div className="w-2 h-2 rounded-[1px] bg-green-300 dark:bg-green-800" />
-                <div className="w-2 h-2 rounded-[1px] bg-green-500 dark:bg-green-600" />
-                <div className="w-2 h-2 rounded-[1px] bg-green-700 dark:bg-green-400" />
-                <span>more</span>
-              </div>
-            </div>
           </div>
-
-          {/* GitHub Style Filter Tabs directly underneath matching reference image layout */}
-          <div className="flex flex-wrap items-center gap-1 mt-4">
-            {["2026", "2025", "2024", "2023", "2022"].map((year) => (
-              <button
-                key={year}
-                onClick={() => setActiveYear(year)}
-                className={`px-3 py-1 text-[11px] font-mono border rounded-lg transition-all cursor-pointer ${
-                  activeYear === year
-                    ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 font-medium"
-                    : "border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                }`}
+          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">Core architectures and ML tooling I've built or collaborated on.</p>
+          
+          <div className="mt-3 min-h-[160px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeYear}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
               >
-                {year}
-              </button>
-            ))}
+                {githubProjects[activeYear].map((project) => (
+                  <ProjectRow 
+                    key={project.title}
+                    title={project.title}
+                    repo={project.repo}
+                    url={project.url}
+                    desc={project.desc}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </div>
+        </BlurFade>
 
-        {/* Recent Reads Section */}
-        <div id="reads" className="mt-10 pb-8 border-b border-zinc-200 dark:border-zinc-900">
-          <div className="flex items-center justify-between text-[13px] tracking-wider text-zinc-400 dark:text-zinc-500 uppercase font-mono mb-4">
-            <span className="font-normal text-zinc-800 dark:text-zinc-200">Recent Reads</span>
-            <span className="px-1.5 py-0.5 text-[10px] font-mono border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-md bg-zinc-50 dark:bg-zinc-900/50 lowercase">r</span>
+        {/* experience */}
+        <BlurFade delay={0.5} inView>
+          <SectionTitle id="experience">experience</SectionTitle>
+          <div className="mt-3">
+            <ExperienceItem
+              date="nov 2025 — may 2026"
+              role="AI/ML Intern & Engineer"
+              org="Manglan Labs"
+              body="Worked collaboratively with a research group to design, research, and implement new small-sized model architectures."
+            />
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        </BlurFade>
+
+        {/* recent reads */}
+        <BlurFade delay={0.6} inView>
+          <SectionTitle id="reads">recent reads</SectionTitle>
+          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">Research papers and insights I am currently exploring.</p>
+          <div className="grid md:grid-cols-3 gap-2.5">
             {[
-              { t: "Efficient Estimation of Word Representations in Vector Space", author: "Mikolov et al." },
-              { t: "Attention Is All You Need", author: "Vaswani et al." },
-              { t: "Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer", author: "Shazeer et al." }
-            ].map((paper) => (
-              <div key={paper.t} className="border border-zinc-200 dark:border-zinc-900 p-3.5 rounded-xl bg-white dark:bg-zinc-900/10 hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors">
-                <div className="flex items-start gap-1.5 text-zinc-400 dark:text-zinc-500 mb-1 font-mono text-[10px]">
-                  <BookOpen className="w-3 h-3 shrink-0 mt-0.5" />
-                  <span>RESEARCH LABS</span>
-                </div>
-                <h4 className="text-[12.5px] font-medium text-zinc-700 dark:text-zinc-300 leading-snug">{paper.t}</h4>
-                <span className="block mt-1.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">{paper.author}</span>
-              </div>
+              { d: "Research", t: "Efficient Estimation of Word Representations in Vector Space", href: "#reads" },
+              { d: "Research", t: "Attention Is All You Need: Fundamentals of Transformers", href: "#reads" },
+              { d: "Research", t: "Outrageously Large Neural Networks: Sparsely-Gated MoE", href: "#reads" },
+            ].map((w) => (
+              <a key={w.t} href={w.href} className="border border-zinc-200 dark:border-zinc-900 rounded-xl p-3.5 bg-white/30 dark:bg-zinc-900/10 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700 transition flex flex-col gap-2">
+                <div className="font-mono text-[11px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5"><BookOpen className="w-3 h-3"/> {w.d}</div>
+                <div className="text-[13.5px] leading-snug text-zinc-700 dark:text-zinc-300">{w.t}</div>
+              </a>
             ))}
           </div>
-        </div>
+        </BlurFade>
 
-        {/* Contact Layout Frame Block */}
-        <div id="contact" className="mt-10">
-          <div className="flex items-center justify-between text-[13px] tracking-wider text-zinc-400 dark:text-zinc-500 uppercase font-mono mb-3">
-            <span className="font-normal text-zinc-800 dark:text-zinc-200">Contact</span>
-            <span className="px-1.5 py-0.5 text-[10px] font-mono border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-md bg-zinc-50 dark:bg-zinc-900/50 lowercase">c</span>
-          </div>
-          
+        {/* Contact Redesigned Layout matching Reference 3 */}
+        <BlurFade delay={0.7} inView>
+          <SectionTitle id="contact">contact</SectionTitle>
           <div className="w-full border-t border-zinc-200 dark:border-zinc-900 mt-2">
             {[
-              { label: "email", val: "dev@avhi.in", link: "mailto:syphaxtwt2025@gmail.com" },
-              { label: "x.com", val: "@syphax_twt", link: "https://x.com/syphax_twt" },
-              { label: "github", val: "@rkcode2025", link: "https://github.com/rkcode2025" }
-            ].map((chan) => (
+              { I: Mail, label: "email", v: "dev@avhi.in", url: "mailto:syphaxtwt2025@gmail.com" },
+              { I: Twitter, label: "x.com", v: "@syphax_twt", url: "https://x.com/syphax_twt" },
+              { I: Github, label: "github", v: "rkcode2025", url: "https://github.com/rkcode2025" },
+            ].map(({ I, label, v, url }) => (
               <a 
-                key={chan.label} 
-                href={chan.link} 
+                key={label} 
+                href={url} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="group flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-900 px-0.5 hover:bg-zinc-100/30 dark:hover:bg-zinc-900/10 transition-colors"
+                className="group flex items-center justify-between py-4 border-b border-zinc-200 dark:border-zinc-900 hover:bg-zinc-100/30 dark:hover:bg-zinc-900/20 px-2 rounded-md transition-colors"
               >
-                <span className="text-[13px] text-zinc-700 dark:text-zinc-300 font-mono">{chan.label}</span>
-                <div className="flex items-center gap-1 font-mono text-right">
-                  <span className="text-[13px] text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{chan.val}</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors" />
+                {/* Left Side: Icon and Label Name */}
+                <div className="flex items-center gap-3">
+                  <I className="w-4 h-4 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors" />
+                  <span className="text-[14px] text-zinc-700 dark:text-zinc-300 font-mono tracking-wide">{label}</span>
+                </div>
+                
+                {/* Right Side: Identity Handle and Outbound Arrow */}
+                <div className="flex items-center gap-1.5 text-right font-mono">
+                  <span className="text-[14px] text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{v}</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors" />
                 </div>
               </a>
             ))}
           </div>
-        </div>
+        </BlurFade>
 
-        {/* System Bottom Footer Info row */}
-        <footer className="mt-16 flex flex-col items-center gap-0.5 font-mono text-[10px] text-zinc-400 dark:text-zinc-600">
-          <div className="flex items-center gap-2">
-            <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400">built with tanstack</a>
-            <span>·</span>
-            <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400">rss</a>
-            <span>·</span>
-            <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400">sitemap</a>
-          </div>
-          <div className="mt-0.5">© 2026 SYPHAX</div>
-        </footer>
+        {/* footer */}
+        <BlurFade delay={0.8} inView>
+          <footer className="mt-24 flex flex-col items-center gap-1.5 font-mono text-[11px] text-zinc-400 dark:text-zinc-600">
+            <div className="flex items-center gap-2">
+              <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">built with tanstack</a>
+              <span>·</span>
+              <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">rss</a>
+              <span>·</span>
+              <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">sitemap</a>
+            </div>
+            <div>© 2026 syphax</div>
+          </footer>
+        </BlurFade>
       </main>
-
-      {/* Active Command Search Dialog Modal View Layer (Rounded Corners Retained) */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSearchOpen(false)}
-              className="absolute inset-0 bg-zinc-950/40 backdrop-blur-xs"
-            />
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.97, y: -8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.97, y: -8 }}
-              transition={{ duration: 0.16 }}
-              className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl relative z-10 overflow-hidden font-mono"
-            >
-              <div className="flex items-center gap-3 px-4 border-b border-zinc-200 dark:border-zinc-800">
-                <Search className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                <input 
-                  autoFocus
-                  type="text"
-                  placeholder="Search site content..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-3.5 text-[13px] bg-transparent text-zinc-800 dark:text-zinc-100 outline-none border-none placeholder-zinc-400"
-                />
-                <button 
-                  onClick={() => setIsSearchOpen(false)}
-                  className="text-[9px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 border border-zinc-200 dark:border-zinc-700 text-zinc-400 rounded-md"
-                >
-                  ESC
-                </button>
-              </div>
-
-              <div className="max-h-[280px] overflow-y-auto p-1.5">
-                {filteredSearchItems.length > 0 ? (
-                  filteredSearchItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => navigateToSection(item.id)}
-                      className="w-full text-left p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 flex flex-col gap-0.5 transition-colors cursor-pointer rounded-lg group"
-                    >
-                      <div className="flex items-center justify-between text-[12.5px]">
-                        <span className="text-zinc-800 dark:text-zinc-200 font-medium group-hover:text-zinc-950 dark:group-hover:text-zinc-100">{item.title}</span>
-                        <span className="text-[9px] text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-800 px-1.5 rounded-md uppercase tracking-wide">{item.type}</span>
-                      </div>
-                      {item.desc && (
-                        <span className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">{item.desc}</span>
-                      )}
-                    </button>
-                    ))
-                ) : (
-                  <div className="p-4 text-center text-zinc-400 text-[11px]">
-                    No search nodes found.
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
