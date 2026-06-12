@@ -65,7 +65,26 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-weight: 500;
+
+    /* ----- Scrollbar removal ----- */
+    /* Prevent horizontal scrollbar (if content doesn’t need it) */
+    overflow-x: hidden;
+
+    /* Hide scrollbar in Firefox */
+    scrollbar-width: none;
+
+    /* Hide scrollbar in IE and Edge (legacy) */
+    -ms-overflow-style: none;
   }
+
+  /* Hide scrollbar in Chrome, Safari, Opera, newer Edge */
+  html::-webkit-scrollbar {
+    display: none;
+  }
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
   .font-mono { font-family: var(--font-mono); }
   .font-serif { font-family: var(--font-serif); }
 }
