@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
-
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -55,11 +53,11 @@
   --primary-foreground: oklch(0.95 0.005 260);
 
   /* Elevated surfaces (all lighter than #121212) */
-  --muted: #1a1a1a;       /* subtle background for hover / secondary */
-  --card: #181818;        /* cards */
-  --primary: #181818;     /* primary surfaces */
-  --accent: #1f1f1f;      /* accents */
-  --border: #262626;      /* borders & dividers */
+  --muted: #1a1a1a;
+  --card: #181818;
+  --primary: #181818;
+  --accent: #1f1f1f;
+  --border: #262626;
 
   /* Badge / link */
   --badge: oklch(0.25 0.05 300);
