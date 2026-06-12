@@ -132,6 +132,117 @@ function ExperienceItem({ date, role, org, body }: { date: string; role: string;
   );
 }
 
+// ----- NEW: GitHub Heatmap Component -----
+function GitHubHeatmap() {
+  const [year, setYear] = useState<2025 | 2026>(2025);
+  const [data, setData] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`https://github-contributions-api.jogruber.de/v4/rkcode2025?y=${year}`)
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json.contributions || {});
+      })
+      .catch((err) => console.error("Failed to fetch contributions", err))
+      .finally(() => setLoading(false));
+  }, [year]);
+
+  const getWeeks = () => {
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
+    const weeks: { date: Date; count: number }[][] = [];
+    let currentWeek: { date: Date; count: number }[] = [];
+
+    for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0];
+      const count = data[dateStr] || 0;
+      currentWeek.push({ date: new Date(d), count });
+      if (d.getDay() === 6 || d.getTime() === endDate.getTime()) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    return weeks;
+  };
+
+  const getColorClass = (count: number) => {
+    if (count === 0) return "bg-zinc-100 dark:bg-zinc-800";
+    if (count <= 2) return "bg-emerald-200 dark:bg-emerald-900/60";
+    if (count <= 4) return "bg-emerald-400 dark:bg-emerald-700";
+    if (count <= 6) return "bg-emerald-600 dark:bg-emerald-500";
+    return "bg-emerald-800 dark:bg-emerald-400";
+  };
+
+  if (loading) {
+    return (
+      <div className="py-8 text-center text-zinc-400 text-sm font-mono">
+        loading contribution matrix...
+      </div>
+    );
+  }
+
+  const weeks = getWeeks();
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="min-w-[720px]">
+        {/* Year toggle */}
+        <div className="flex justify-end gap-2 mb-4">
+          <button
+            onClick={() => setYear(2025)}
+            className={`px-3 py-1 text-xs font-mono rounded-md transition ${
+              year === 2025
+                ? "bg-emerald-600 text-white dark:bg-emerald-500"
+                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+            }`}
+          >
+            2025
+          </button>
+          <button
+            onClick={() => setYear(2026)}
+            className={`px-3 py-1 text-xs font-mono rounded-md transition ${
+              year === 2026
+                ? "bg-emerald-600 text-white dark:bg-emerald-500"
+                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+            }`}
+          >
+            2026
+          </button>
+        </div>
+
+        {/* Heatmap grid */}
+        <div className="flex gap-[3px]">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex flex-col gap-[3px]">
+              {week.map((day, di) => (
+                <div
+                  key={di}
+                  className={`w-3 h-3 rounded-sm ${getColorClass(day.count)} transition-all hover:scale-110 hover:shadow-sm`}
+                  title={`${day.date.toDateString()}: ${day.count} contributions`}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div className="flex justify-end items-center gap-2 mt-4 text-[10px] font-mono text-zinc-400">
+          <span>Less</span>
+          <div className="w-2.5 h-2.5 rounded-sm bg-zinc-100 dark:bg-zinc-800" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-200 dark:bg-emerald-900/60" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-400 dark:bg-emerald-700" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-600 dark:bg-emerald-500" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-800 dark:bg-emerald-400" />
+          <span>More</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+// ----- END OF NEW COMPONENT -----
+
 function Index() {
   const time = useClock();
   const { dark, toggle } = useTheme();
@@ -406,48 +517,22 @@ function Index() {
           </div>
         </BlurFade>
 
+        {/* GitHub contribution matrix - REPLACED with custom heatmap */}
         <BlurFade delay={0.45} inView>
-           <SectionTitle id="github-stats" shortcut="g">
-             github contribution matrix
-           </SectionTitle>
-           
-           <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 -mt-2">
-             Real-time activity trace for{" "}
-             <span className="font-mono text-zinc-700 dark:text-zinc-300">
+          <SectionTitle id="github-stats" shortcut="g">
+            github contribution matrix
+          </SectionTitle>
+          
+          <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 -mt-2">
+            Real-time activity trace for{" "}
+            <span className="font-mono text-zinc-700 dark:text-zinc-300">
               rkcode2025
-             </span>
-            </p>
+            </span>
+          </p>
 
-            <div
-              className="
-                relative
-                overflow-hidden
-                rounded-3xl
-                bg-white
-                dark:bg-zinc-900/50
-                backdrop-blur-xl
-                px-8
-                py-8
-              "
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
-
-              <div className="relative flex justify-center overflow-x-auto scrollbar-none">
-                <img
-                  src="https://ghchart.rshah.org/rkcode2025"
-                  alt="GitHub Contributions"
-                  className="
-                    w-full
-                    max-w-5xl
-                    min-w-[720px]
-                    h-auto
-                    select-none
-                    dark:brightness-[0.9]
-                    dark:contrast-[1.1]
-                  "
-                  draggable={false}
-                />
-              </div>
+          {/* Custom heatmap – no borders, clean greens */}
+          <div className="relative overflow-hidden rounded-3xl py-4">
+            <GitHubHeatmap />
           </div>
         </BlurFade>
 
