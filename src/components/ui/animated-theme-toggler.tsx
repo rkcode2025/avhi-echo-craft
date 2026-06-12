@@ -1,34 +1,19 @@
-"use client";
-
-import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
 
-export function AnimatedThemeToggler() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  const isDark = theme === "dark";
-
+export function AnimatedThemeToggler({ dark, toggle }: { dark: boolean; toggle: () => void }) {
   return (
     <button
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggle}
       className="relative w-10 h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors overflow-hidden cursor-pointer"
       aria-label="Toggle theme"
     >
       <motion.div
         initial={false}
-        animate={{ rotate: isDark ? 0 : 180 }}
+        animate={{ rotate: dark ? 0 : 180 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         className="absolute inset-0 flex items-center justify-center"
       >
-        {isDark ? (
+        {dark ? (
           <motion.svg
             key="moon"
             initial={{ scale: 0, rotate: -45 }}
