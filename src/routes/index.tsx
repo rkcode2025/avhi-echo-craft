@@ -418,9 +418,9 @@ function Index() {
                   <h1 style={{ fontFamily: "'EB Garamond', serif" }} className="text-4xl md:text-5xl font-semibold tracking-tight text-zinc-800 dark:text-zinc-200">
                     Syphax
                   </h1>
-                  <svg className="w-[19px] h-[19px] text-blue-500 shrink-0 mt-1" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="11" fill="currentColor"/>
-                    <path d="M8.5 12.5l2 2 5-5" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg className="w-[19px] h-[19px] shrink-0 mt-1" viewBox="0 0 22 22" fill="none">
+                    <circle cx="11" cy="11" r="11" fill="#1D9BF0" />
+                    <path d="M6.5 11.5L9.5 14.5L15.5 8.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                   </svg>
                 </div>
                 <p className="mt-3 text-[13px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wide">
