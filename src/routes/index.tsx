@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Syphax — AI/ML Engineer" },
-      { name: "description", content: "Personal site of Syphax." },
+      { name: "description", content: "Portfolio site." },
     ],
   }),
   component: Index,
@@ -266,7 +266,7 @@ function Index() {
 
       <div className="w-full relative">
         <header className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between font-mono text-[12px] text-zinc-400 dark:text-zinc-500 tracking-wider">
-          <div className="flex items-center gap-1">EST. 2026</div>
+          <div className="flex items-center gap-1">EST. 2024</div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
@@ -484,7 +484,7 @@ function Index() {
           <SectionTitle id="contact" shortcut="c">contact</SectionTitle>
           <div className="w-full border-t border-zinc-200 dark:border-zinc-900 mt-2">
             {[
-              { I: Mail, label: "email", v: "dev@avhi.in", url: "mailto:syphaxtwt2025@gmail.com" },
+              { I: Mail, label: "email", v: "syphaxtwt2025@gmail.com", url: "mailto:syphaxtwt2025@gmail.com" },
               { I: Twitter, label: "x.com", v: "@syphax_twt", url: "https://x.com/syphax_twt" },
               { I: Github, label: "github", v: "rkcode2025", url: "https://github.com/rkcode2025" },
             ].map(({ I, label, v, url }) => (
