@@ -406,47 +406,53 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* GitHub Stats Section - Polished Implementation */}
-        <BlurFade delay={0.45} inView>
-          <SectionTitle id="github-stats" shortcut="g">github contribution matrix</SectionTitle>
-          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-6 -mt-2">
-            Real-time activity trace for <span className="font-mono text-zinc-600 dark:text-zinc-300">rkcode2025</span>.
-          </p>
+         <BlurFade delay={0.45} inView>
+           <SectionTitle id="github-stats" shortcut="g">
+             github contribution matrix
+           </SectionTitle>
+           
+           <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 -mt-2">
+             Real-time activity trace for{" "}
+             <span className="font-mono text-zinc-700 dark:text-zinc-300">
+              rkcode2025
+             </span>
+            </p>
 
-          <div className="relative group overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white/50 dark:bg-zinc-900/30 p-6 shadow-sm backdrop-blur-md transition-all duration-500 hover:border-zinc-300 dark:hover:border-zinc-700">
-            {/* Glossy Overlay Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent opacity-50" />
-            
-            <div className="relative w-full overflow-x-auto scrollbar-none flex justify-center items-center py-2">
-              <img 
-                src="https://ghchart.rshah.org/rkcode2025" 
-                alt="rkcode2025's GitHub Contributions"
-                className="w-full h-auto min-w-[700px] select-none transition-transform duration-700 hover:scale-[1.01] dark:invert dark:hue-rotate-180 dark:contrast-125"
-              />
-            </div>
-            
-            {/* Footer Metrics */}
-            <div className="relative mt-6 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-              <div className="flex gap-4">
-                <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-widest text-zinc-400">Status</span>
-                  <span className="text-[12px] font-medium text-green-600 dark:text-green-400">● Active</span>
-                </div>
-              </div>
-              <a 
-                href="https://github.com/rkcode2025" 
-                target="_blank" 
-                rel="noreferrer"
-                className="flex items-center gap-2 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-blue-500 transition-colors"
-              >
-                View Profile
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
-        </BlurFade>
+            <div
+              className="
+                relative
+                overflow-hidden
+                rounded-3xl
+                bg-zinc-100/80
+                dark:bg-zinc-900/50
+                backdrop-blur-xl
+                px-8
+                py-8
+              "
+            >
+    
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5 pointer-events-none"
+      />
 
-// ... [Continue with the rest of your components]
+    <div className="relative flex justify-center overflow-x-auto scrollbar-none">
+      <img
+        src="https://ghchart.rshah.org/rkcode2025"
+        alt="GitHub Contributions"
+        className="
+          w-full
+          max-w-5xl
+          min-w-[720px]
+          h-auto
+          select-none
+          dark:invert
+          dark:hue-rotate-180
+          dark:contrast-125
+        "
+        draggable={false}
+      />
+    </div>
+  </div>
+</BlurFade>
 
         {/* experience */}
         <BlurFade delay={0.5} inView>
