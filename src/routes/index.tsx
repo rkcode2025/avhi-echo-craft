@@ -406,36 +406,47 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Dedicated GitHub Profile Matrix Section (Direct Live Stream Asset Pipeline) */}
+        {/* GitHub Stats Section - Polished Implementation */}
         <BlurFade delay={0.45} inView>
-          <SectionTitle id="github-stats" shortcut="g">github stats</SectionTitle>
-          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">
-            Real-time visual profile trace directly from @rkcode2025.
+          <SectionTitle id="github-stats" shortcut="g">github contribution matrix</SectionTitle>
+          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-6 -mt-2">
+            Real-time activity trace for <span className="font-mono text-zinc-600 dark:text-zinc-300">rkcode2025</span>.
           </p>
 
-          <div className="mt-4 border border-zinc-200 dark:border-zinc-900 rounded-xl bg-white dark:bg-zinc-900/10 p-4 shadow-xs">
-            <div className="w-full overflow-x-auto scrollbar-none rounded-lg py-2">
+          <div className="relative group overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white/50 dark:bg-zinc-900/30 p-6 shadow-sm backdrop-blur-md transition-all duration-500 hover:border-zinc-300 dark:hover:border-zinc-700">
+            {/* Glossy Overlay Effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent opacity-50" />
+            
+            <div className="relative w-full overflow-x-auto scrollbar-none flex justify-center items-center py-2">
               <img 
                 src="https://ghchart.rshah.org/rkcode2025" 
-                alt="rkcode2025's Real-Time Contributions Graph"
-                className="w-full h-auto min-w-[600px] select-none pointer-events-none dark:invert dark:hue-rotate-180 dark:contrast-125"
+                alt="rkcode2025's GitHub Contributions"
+                className="w-full h-auto min-w-[700px] select-none transition-transform duration-700 hover:scale-[1.01] dark:invert dark:hue-rotate-180 dark:contrast-125"
               />
             </div>
             
-            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-900/60">
+            {/* Footer Metrics */}
+            <div className="relative mt-6 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+              <div className="flex gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-400">Status</span>
+                  <span className="text-[12px] font-medium text-green-600 dark:text-green-400">● Active</span>
+                </div>
+              </div>
               <a 
                 href="https://github.com/rkcode2025" 
                 target="_blank" 
                 rel="noreferrer"
-                className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors flex items-center gap-1"
+                className="flex items-center gap-2 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-blue-500 transition-colors"
               >
-                <span>view original profile node</span>
-                <span>→</span>
+                View Profile
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
-              <span className="text-[10px] opacity-50 font-mono">live svg graph</span>
             </div>
           </div>
         </BlurFade>
+
+// ... [Continue with the rest of your components]
 
         {/* experience */}
         <BlurFade delay={0.5} inView>
