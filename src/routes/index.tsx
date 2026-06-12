@@ -132,21 +132,11 @@ function ExperienceItem({ date, role, org, body }: { date: string; role: string;
   );
 }
 
-interface GitHubDay {
-  date: string;
-  count: number;
-  level: number;
-}
-
 function Index() {
   const time = useClock();
   const { dark, toggle } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [githubData, setGithubData] = useState<GitHubDay[]>([]);
-  const [totalContributions, setTotalContributions] = useState<number>(0);
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
-  const [hoveredDay, setHoveredDay] = useState<{ count: number; date: string; x: number; y: number } | null>(null);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
 
   const playWaterDropSound = () => {
@@ -170,7 +160,7 @@ function Index() {
       osc.start();
       osc.stop(ctx.currentTime + 0.25);
     } catch (e) {
-      // Audio engine fallback
+      // Audio fallback setup
     }
   };
 
@@ -182,51 +172,6 @@ function Index() {
     setRipples((prev) => [...prev, { id: Date.now(), x, y }]);
     toggle();
   };
-
-  // High fidelity raw SVG serverless stream parser for rkcode2025
-  useEffect(() => {
-    async function fetchGitHubData() {
-      try {
-        const res = await fetch(`https://api.github.com/users/rkcode2025/events`);
-        if (!res.ok) throw new Error();
-        
-        // Real-time fallback pipeline utilizing direct text block injection vectors
-        const daysInYear = selectedYear === 2026 ? 164 : 365;
-        const generatedDays: GitHubDay[] = [];
-        
-        // Emulating verified baseline arrays derived from API structures safely inside local execution bounds
-        let cumulative = 0;
-        for (let i = 0; i < 371; i++) {
-          if (i <= daysInYear) {
-            const seed = Math.abs(Math.sin(i * 0.25 + (selectedYear === 2026 ? 3 : 1))) * 5 + (i % 7 === 0 ? 4 : 0);
-            const level = seed > 7 ? 4 : seed > 4 ? 3 : seed > 2 ? 2 : seed > 0.5 ? 1 : 0;
-            const count = level === 0 ? 0 : Math.floor(seed);
-            cumulative += count;
-
-            const d = new Date(selectedYear, 0, i + 1);
-            generatedDays.push({
-              date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              count,
-              level
-            });
-          } else {
-            generatedDays.push({ date: "", count: 0, level: 0 });
-          }
-        }
-        
-        setGithubData(generatedDays);
-        setTotalContributions(selectedYear === 2026 ? 642 : 1481);
-      } catch {
-        // Safe operational failure node block mapping standard structure shapes
-        const mockArray: GitHubDay[] = [];
-        for (let i = 0; i < 371; i++) {
-          mockArray.push({ date: "", count: 0, level: 0 });
-        }
-        setGithubData(mockArray);
-      }
-    }
-    fetchGitHubData();
-  }, [selectedYear]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -295,19 +240,6 @@ function Index() {
 
   const filteredItems = searchItems.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const chunkWeeks = (arr: GitHubDay[]) => {
-    const chunked: GitHubDay[][] = [];
-    let current: GitHubDay[] = [];
-    arr.forEach((d, idx) => {
-      current.push(d);
-      if (current.length === 7 || idx === arr.length - 1) {
-        chunked.push(current);
-        current = [];
-      }
-    });
-    return chunked;
-  };
-
   return (
     <div className="min-h-screen pb-16 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 transition-colors duration-300 relative select-none selection:bg-zinc-200 dark:selection:bg-zinc-800 overflow-x-hidden">
       
@@ -315,7 +247,7 @@ function Index() {
         @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600&display=swap');
       `}</style>
 
-      {/* Ripple Animation Node Mask */}
+      {/* Ripple Node Layer */}
       <AnimatePresence>
         {ripples.map((ripple) => (
           <motion.div
@@ -353,7 +285,7 @@ function Index() {
 
       <main className="max-w-2xl mx-auto px-6 mt-14">
         
-        {/* Profile Frame Grid Architecture */}
+        {/* Profile Grid Header */}
         <BlurFade delay={0.1} inView>
           <div className="relative p-0 bg-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             
@@ -474,94 +406,33 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Dedicated GitHub Profile Matrix Infrastructure Node Section */}
+        {/* Dedicated GitHub Profile Matrix Section (Direct Live Stream Asset Pipeline) */}
         <BlurFade delay={0.45} inView>
           <SectionTitle id="github-stats" shortcut="g">github stats</SectionTitle>
-          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">Real-time code iteration metrics and trace history for rkcode2025.</p>
+          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">
+            Real-time visual profile trace directly from @rkcode2025.
+          </p>
 
-          <div className="mt-4 border border-zinc-200 dark:border-zinc-900 rounded-xl bg-white dark:bg-zinc-900/10 p-4 shadow-xs relative">
+          <div className="mt-4 border border-zinc-200 dark:border-zinc-900 rounded-xl bg-white dark:bg-zinc-900/10 p-4 shadow-xs">
+            <div className="w-full overflow-x-auto scrollbar-none rounded-lg py-2">
+              <img 
+                src="https://ghchart.rshah.org/rkcode2025" 
+                alt="rkcode2025's Real-Time Contributions Graph"
+                className="w-full h-auto min-w-[600px] select-none pointer-events-none dark:invert dark:hue-rotate-180 dark:contrast-125"
+              />
+            </div>
             
-            {hoveredDay && (
-              <div 
-                style={{ left: hoveredDay.x - 60, top: hoveredDay.y - 42 }}
-                className="absolute z-50 pointer-events-none bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 text-[11px] font-mono rounded px-2 py-1 shadow-md whitespace-nowrap transition-all duration-100"
+            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-900/60">
+              <a 
+                href="https://github.com/rkcode2025" 
+                target="_blank" 
+                rel="noreferrer"
+                className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors flex items-center gap-1"
               >
-                {hoveredDay.count} contributions on {hoveredDay.date || "this day"}
-              </div>
-            )}
-
-            <div className="flex justify-between text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mb-2 px-1 select-none">
-              <span>jan</span><span>feb</span><span>mar</span><span>apr</span><span>may</span><span>jun</span>
-              <span>jul</span><span>aug</span><span>sep</span><span>oct</span><span>nov</span><span>dec</span>
-            </div>
-
-            <div className="flex gap-[3px] overflow-x-auto pb-2 scrollbar-none">
-              {chunkWeeks(githubData).map((week, wIdx) => (
-                <div key={wIdx} className="flex flex-col gap-[3px] shrink-0">
-                  {week.map((day, dIdx) => (
-                    <div 
-                      key={dIdx} 
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const parentRect = e.currentTarget.parentElement?.parentElement?.parentElement?.getBoundingClientRect();
-                        if (parentRect && day.date) {
-                          setHoveredDay({
-                            count: day.count,
-                            date: day.date,
-                            x: rect.left - parentRect.left + rect.width / 2,
-                            y: rect.top - parentRect.top
-                          });
-                        }
-                      }}
-                      onMouseLeave={() => setHoveredDay(null)}
-                      className={`w-[9.5px] h-[9.5px] rounded-[1.5px] transition-colors cursor-pointer ${
-                        day.level === 4 ? "bg-green-700 dark:bg-green-400" :
-                        day.level === 3 ? "bg-green-500 dark:bg-green-500" :
-                        day.level === 2 ? "bg-green-300 dark:bg-green-600" :
-                        day.level === 1 ? "bg-green-100 dark:bg-green-800/40" :
-                        "bg-zinc-100 dark:bg-zinc-900"
-                      }`}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mt-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-900/60">
-              <div>{totalContributions.toLocaleString()} contributions in {selectedYear}</div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 bg-zinc-100/60 dark:bg-zinc-900/60 p-0.5 rounded-lg border border-zinc-200/50 dark:border-zinc-800/50">
-                  {[2026, 2025, 2024, 2023, 2022].map((yr) => (
-                    <button
-                      key={yr}
-                      onClick={() => {
-                        if (yr === 2026 || yr === 2025) {
-                          setSelectedYear(yr);
-                        }
-                      }}
-                      className={`px-2 py-0.5 rounded-md transition-all text-[10px] ${
-                        selectedYear === yr 
-                          ? "bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 font-medium shadow-2xs border border-zinc-200 dark:border-zinc-700" 
-                          : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                      }`}
-                      disabled={yr < 2025}
-                    >
-                      {yr}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-1.5 select-none text-[10px]">
-                  <span>less</span>
-                  <div className="w-[9px] h-[9px] rounded-[1px] bg-zinc-100 dark:bg-zinc-900" />
-                  <div className="w-[9px] h-[9px] rounded-[1px] bg-green-100 dark:bg-green-800/40" />
-                  <div className="w-[9px] h-[9px] rounded-[1px] bg-green-300 dark:bg-green-600" />
-                  <div className="w-[9px] h-[9px] rounded-[1px] bg-green-500 dark:bg-green-500" />
-                  <div className="w-[9px] h-[9px] rounded-[1px] bg-green-700 dark:bg-green-400" />
-                  <span>more</span>
-                </div>
-              </div>
+                <span>view original profile node</span>
+                <span>→</span>
+              </a>
+              <span className="text-[10px] opacity-50 font-mono">live svg graph</span>
             </div>
           </div>
         </BlurFade>
