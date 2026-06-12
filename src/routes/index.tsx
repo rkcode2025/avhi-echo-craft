@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { motion, AnimatePresence } from "framer-motion";
-import { AnimatedThemeToggler } from "@/registry/magicui/animated-theme-toggler";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 export const Route = createFileRoute("/")({
   head: () => ({
