@@ -2,10 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Search, Clock, ArrowUpRight,
-  Mail, Sun, Moon, Github, Twitter, BookOpen
+  Mail, Github, Twitter, BookOpen
 } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { motion, AnimatePresence } from "framer-motion";
+import { AnimatedThemeToggler } from "@/registry/magicui/animated-theme-toggler";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,29 +37,6 @@ function useClock() {
   return t;
 }
 
-function useTheme() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("theme");
-      return saved ? saved === "dark" : true;
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (dark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [dark]);
-
-  return { dark, toggle: () => setDark((d) => !d) };
-}
-
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd className="font-mono inline-flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-[11px] text-zinc-500 dark:text-zinc-400">
@@ -86,6 +64,7 @@ function TechIcon({ label, iconElement, imgSrc }: { label: string; iconElement?:
           {label}
         </div>
       </div>
+      {/* Border removed */}
       <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-zinc-50 dark:bg-zinc-900/40 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900">
         {iconElement ? (
           iconElement
@@ -140,17 +119,8 @@ function GitHubHeatmap() {
 
   useEffect(() => {
     setLoading(true);
-    // Last 6 months from today
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 6);
-    
-    // Format for API: YYYY-MM-DD
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
-    const from = formatDate(startDate);
-    const to = formatDate(endDate);
-    
-    fetch(`https://github-contributions-api.jogruber.de/v4/rkcode2025?from=${from}&to=${to}`)
+    // Fetch contributions for the user (last 6 months via API)
+    fetch(`https://github-contributions-api.deno.dev/rkcode2025.json`)
       .then(res => {
         if (!res.ok) throw new Error(`API error ${res.status}`);
         return res.json();
@@ -165,6 +135,9 @@ function GitHubHeatmap() {
       .catch(err => {
         console.warn("API failed, using dummy data", err);
         // Generate realistic dummy data for last 6 months
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - 6);
         const dummy: Record<string, number> = {};
         let cur = new Date(startDate);
         while (cur <= endDate) {
@@ -183,7 +156,6 @@ function GitHubHeatmap() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Compute weeks after data is loaded
   useEffect(() => {
     if (loading) return;
     const endDate = new Date();
@@ -199,7 +171,6 @@ function GitHubHeatmap() {
       const count = data[dateStr] || 0;
       currentWeek.push({ date: new Date(currentDate), count });
       
-      // If Saturday or last day, push week
       if (currentDate.getDay() === 6 || currentDate.toDateString() === endDate.toDateString()) {
         weeksArray.push(currentWeek);
         currentWeek = [];
@@ -268,45 +239,8 @@ function GitHubHeatmap() {
 
 function Index() {
   const time = useClock();
-  const { dark, toggle } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-
-  const playWaterDropSound = () => {
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(550, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.06);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.25);
-    } catch (e) {}
-  };
-
-  const handleThemeToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    playWaterDropSound();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    setRipples((prev) => [...prev, { id: Date.now(), x, y }]);
-    toggle();
-  };
-
-  useEffect(() => {
-    if (ripples.length > 0) {
-      const timer = setTimeout(() => setRipples((prev) => prev.slice(1)), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [ripples]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -366,23 +300,6 @@ function Index() {
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* Circular ripple animation for theme toggle */}
-      <AnimatePresence>
-        {ripples.map((ripple) => (
-          <motion.div
-            key={ripple.id}
-            initial={{ clipPath: "circle(0% at 0px 0px)", opacity: 0.4 }}
-            animate={{ 
-              clipPath: `circle(250% at ${ripple.x}px ${ripple.y}px)`,
-              opacity: [0.4, 0.1, 0]
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.85, ease: "easeOut" }}
-            className="fixed inset-0 pointer-events-none bg-blue-400/20 dark:bg-blue-500/10 z-40"
-          />
-        ))}
-      </AnimatePresence>
-
       <div className="w-full relative">
         <header className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between font-mono text-[12px] text-zinc-400 dark:text-zinc-500 tracking-wider">
           <div className="flex items-center gap-1">EST. 2024</div>
@@ -432,23 +349,10 @@ function Index() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleThemeToggle}
-              aria-label="toggle theme"
-              className="absolute top-0 right-0 w-10 h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs overflow-hidden cursor-pointer shrink-0"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {dark ? (
-                  <motion.div key="sun" initial={{ y: 20, opacity: 0, rotate: -45 }} animate={{ y: 0, opacity: 1, rotate: 0 }} exit={{ y: -20, opacity: 0, rotate: 45 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}>
-                    <Sun className="w-4 h-4 text-zinc-400" />
-                  </motion.div>
-                ) : (
-                  <motion.div key="moon" initial={{ y: 20, opacity: 0, rotate: 45 }} animate={{ y: 0, opacity: 1, rotate: 0 }} exit={{ y: -20, opacity: 0, rotate: -45 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}>
-                    <Moon className="w-4 h-4 text-zinc-500" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
+            {/* Magic UI Animated Theme Toggler */}
+            <div className="absolute top-0 right-0">
+              <AnimatedThemeToggler />
+            </div>
           </div>
         </BlurFade>
 
@@ -478,7 +382,6 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* GitHub graph – now compact (last 6 months) and always visible */}
         <BlurFade delay={0.45} inView>
           <SectionTitle id="github-stats" shortcut="g">github contribution matrix</SectionTitle>
           <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 -mt-2">
