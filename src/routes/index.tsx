@@ -132,7 +132,7 @@ function ExperienceItem({ date, role, org, body }: { date: string; role: string;
   );
 }
 
-// GitHub Heatmap – last 6 months, always visible
+// GitHub Heatmap – fixed with a reliable API
 function GitHubHeatmap() {
   const [data, setData] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -140,21 +140,25 @@ function GitHubHeatmap() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`https://github-contributions-api.deno.dev/rkcode2025.json`)
+    // New stable API that returns a contributions array
+    fetch(`https://gh-contributions-api.vercel.app/api/rkcode2025`)
       .then(res => {
         if (!res.ok) throw new Error(`API error ${res.status}`);
         return res.json();
       })
       .then(json => {
-        if (json && json.contributions) {
-          setData(json.contributions);
-        } else {
-          throw new Error("Invalid data");
-        }
+        // The API returns { contributions: [{ date, count, level }] }
+        const contributionsArr = json.contributions || [];
+        if (contributionsArr.length === 0) throw new Error("Empty contributions");
+        const contributionsMap: Record<string, number> = {};
+        contributionsArr.forEach((c: any) => {
+          contributionsMap[c.date] = c.count;
+        });
+        setData(contributionsMap);
       })
       .catch(err => {
         console.warn("API failed, using dummy data", err);
-        // Generate dummy data for last 6 months
+        // Generate dummy data for last 6 months as fallback
         const endDate = new Date();
         const startDate = new Date();
         startDate.setMonth(startDate.getMonth() - 6);
@@ -409,12 +413,14 @@ function Index() {
                 <div className="hidden absolute inset-0 grid place-items-center text-5xl font-serif font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-900">s</div>
               </div>
               <div className="text-center sm:text-left">
+                {/* --- TWITTER VERIFIED BADGE INSTEAD OF BLUE TICK --- */}
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <h1 style={{ fontFamily: "'EB Garamond', serif" }} className="text-4xl md:text-5xl font-semibold tracking-tight text-zinc-800 dark:text-zinc-200">
                     Syphax
                   </h1>
-                  <svg className="w-[19px] h-[19px] text-blue-500 fill-current shrink-0 mt-1" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  <svg className="w-[19px] h-[19px] text-blue-500 shrink-0 mt-1" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="11" fill="currentColor"/>
+                    <path d="M8.5 12.5l2 2 5-5" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
                 <p className="mt-3 text-[13px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wide">
@@ -422,7 +428,7 @@ function Index() {
                 </p>
               </div>
             </div>
-            {/* Simple theme toggle button with ripple */}
+            {/* Theme toggle */}
             <button
               onClick={handleThemeToggle}
               aria-label="toggle theme"
@@ -484,7 +490,7 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* GitHub graph */}
+        {/* GitHub graph – now using stable API */}
         <BlurFade delay={0.45} inView>
           <SectionTitle id="github-stats" shortcut="g">github contribution matrix</SectionTitle>
           <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 -mt-2">
