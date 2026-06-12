@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Search, Clock, ArrowUpRight,
-  Mail, Sun, Moon, Github, Twitter, BookOpen, Key
+  Mail, Sun, Moon, Github, Twitter, BookOpen
 } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,8 +36,8 @@ function useClock() {
   return t;
 }
 
+// Full-Viewport Circle Theme Overlay Hook
 function useTheme() {
-  // Checks localStorage, defaults to true (dark mode) if not set
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -57,380 +57,549 @@ function useTheme() {
     }
   }, [dark]);
 
-  return { dark, toggle: () => setDark((d) => !d) };
+  return { dark, setDark };
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="font-mono inline-flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-[11px] text-zinc-500 dark:text-zinc-400">
-      {children}
-    </kbd>
-  );
-}
-
-function SectionTitle({ children, id }: { children: React.ReactNode; id: string }) {
-  const scrollToSection = () => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  return (
-    <div id={id} className="font-mono flex items-center gap-2 text-[15px] tracking-widest uppercase text-zinc-700 dark:text-zinc-300 font-medium mt-16 mb-6 group">
-      <span>{children}</span>
-      <button 
-        onClick={scrollToSection}
-        className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-900"
-        title={`Scroll to ${children}`}
-      >
-        <Key className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
-      </button>
-    </div>
-  );
-}
-
-// Interactive SVG Tech Icons with Tooltips on Top
-function TechIcon({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="relative group flex flex-col items-center">
-      {/* Tooltip on Top */}
-      <div className="absolute bottom-full mb-2 flex flex-col items-center pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-30">
-        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-md px-2.5 py-1 text-[11px] font-mono font-bold tracking-wider text-zinc-700 dark:text-zinc-300 shadow-sm whitespace-nowrap">
-          {label}
-        </div>
-      </div>
-      
-      {/* Icon frame */}
-      <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-zinc-400 dark:group-hover:border-zinc-700 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function ProjectRow({ title, repo, url, desc }: { title: string; repo: string; url: string; desc: string }) {
-  return (
-    <a className="group flex flex-col gap-1.5 py-5 border-t border-zinc-200 dark:border-zinc-800 first:border-t-0 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 -mx-3 px-3 rounded-lg transition-all duration-200" href={url} target="_blank" rel="noreferrer">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[14px] font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">{title}</div>
-          <div className="mt-1 flex items-center gap-2 text-[12px] text-zinc-500 dark:text-zinc-500 font-mono">
-            <span>{repo}</span>
-          </div>
-        </div>
-        <ArrowUpRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 shrink-0 mt-1 transition-colors" />
-      </div>
-      <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">{desc}</p>
-    </a>
-  );
-}
-
-function ExperienceItem({
-  date, role, org, body,
-}: { date: string; role: string; org: string; body: string }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-2 md:gap-6 py-6 border-t border-zinc-200 dark:border-zinc-800 first:border-t-0">
-      <div className="font-mono text-[12px] text-zinc-400 dark:text-zinc-500 pt-0.5">{date}</div>
-      <div>
-        <h3 className="text-[14px] flex items-center gap-2 flex-wrap text-zinc-800 dark:text-zinc-200 font-medium">
-          <span>{role}</span>
-          <span className="inline-flex items-center gap-1 text-zinc-600 dark:text-zinc-400 text-[13px]">
-            <span className="w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-[9px]">◎</span>
-            <span>{org}</span>
-          </span>
-        </h3>
-        <p className="mt-2 text-[13.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">{body}</p>
-      </div>
-    </div>
-  );
+interface SearchItem {
+  id: string;
+  title: string;
+  type: string;
+  desc?: string;
 }
 
 function Index() {
   const time = useClock();
-  const { dark, toggle } = useTheme();
-  const [activeYear, setActiveYear] = useState<"2026" | "2025">("2026");
+  const { dark, setDark } = useTheme();
+  const [activeYear, setActiveYear] = useState<"2026" | "2025" | "2024" | "2023" | "2022">("2026");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Theme ripple animation state
+  const [ripple, setRipple] = useState<{ x: number; y: number; visible: boolean; targetDark: boolean } | null>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
-  // Filterable GitHub project items matching the selected year
-  const githubProjects = {
-    "2026": [
-      { title: "Wikitext-MoE-40M", repo: "rkcode2025/Wikitext-MoE-40M", url: "https://github.com/rkcode2025/Wikitext-MoE-40M", desc: "Developed and benchmarked a 109M parameter transformer architecture achieving 35.34 test perplexity." },
-      { title: "AI-Authenticator", repo: "rkcode2025/AI-Authenticator", url: "https://github.com/rkcode2025/AI-Authenticator", desc: "An authentication verification model deployed live on Hugging Face Spaces for detecting synthetic media." }
-    ],
-    "2025": [
-      { title: "XTRAIN", repo: "MangalanLabs/XTRAIN", url: "https://github.com/MangalanLabs/XTRAIN", desc: "A custom CPU-optimized model-agnostic training framework built from scratch. Spearheaded its mathematics-centric language variant framework." }
-    ]
+  // Search Index Data
+  const searchItems: SearchItem[] = [
+    { id: "hero", title: "Overview / Bio", type: "Section" },
+    { id: "stack", title: "Skill / Tech Stack", type: "Section", desc: "Python, PyTorch, TensorFlow, Scikit-Learn, Hugging Face" },
+    { id: "projects", title: "Projects", type: "Section", desc: "Wikitext-MoE-40M, AI-Authenticator, XTRAIN" },
+    { id: "experience", title: "Experience", type: "Section", desc: "Mangalan Labs AI/ML Intern" },
+    { id: "github-graph", title: "GitHub Activity Graph", type: "Section", desc: "Annual contribution block heatmaps" },
+    { id: "reads", title: "Recent Reads", type: "Section", desc: "Transformers, Word Representations, MoE research papers" },
+    { id: "contact", title: "Contact Information", type: "Section", desc: "Email, X.com, GitHub links" },
+  ];
+
+  // Global Keyboard Shortcuts for Sections & Search Modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle search modal with Cmd+K or Ctrl+K
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+        return;
+      }
+
+      // Ignore individual hotkeys if user is actively writing in input elements
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA" ||
+        document.activeElement?.getAttribute("contenteditable") === "true"
+      ) {
+        return;
+      }
+
+      const keyMap: Record<string, string> = {
+        h: "hero",
+        s: "stack",
+        p: "projects",
+        e: "experience",
+        g: "github-graph",
+        r: "reads",
+        c: "contact",
+      };
+
+      const targetId = keyMap[e.key.toLowerCase()];
+      if (targetId) {
+        e.preventDefault();
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleThemeToggleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const nextDark = !dark;
+
+    setRipple({ x, y, visible: true, targetDark: nextDark });
+    
+    // Switch state midway through visual wave expansion
+    setTimeout(() => {
+      setDark(nextDark);
+    }, 250);
+
+    setTimeout(() => {
+      setRipple(null);
+    }, 600);
   };
 
+  const filteredSearchItems = searchItems.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.desc && item.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const navigateToSection = (id: string) => {
+    setIsSearchOpen(false);
+    setSearchQuery("");
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
+  // Generate deterministic contribution arrays mimicking actual GitHub block arrays
+  const getContributionGrid = (year: string) => {
+    const seed = year.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const columns = 38; 
+    const rows = 7;
+    const items = [];
+    
+    for (let c = 0; c < columns; c++) {
+      const colItems = [];
+      for (let r = 0; r < rows; r++) {
+        const val = (seed * (c + 1) * (r + 3)) % 100;
+        let level = 0;
+        if (val > 88) level = 4;
+        else if (val > 72) level = 3;
+        else if (val > 45) level = 2;
+        else if (val > 20) level = 1;
+        
+        // Hide future months for current year 2026 (e.g. mock layout)
+        const isFuture = year === "2026" && c > 18;
+        colItems.push(isFuture ? -1 : level);
+      }
+      items.push(colItems);
+    }
+    return items;
+  };
+
+  const gridData = getContributionGrid(activeYear);
+
   return (
-    <div className="min-h-screen pb-16 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 transition-colors duration-300">
+    <div className="min-h-screen pb-24 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 transition-colors duration-300 relative overflow-x-hidden selection:bg-zinc-200 dark:selection:bg-zinc-800">
       
-      {/* Structural Top Accent Lines */}
-      <div className="w-full border-b border-zinc-200/60 dark:border-zinc-900/60 relative">
-        <header className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between font-mono text-[12px] text-zinc-400 dark:text-zinc-500 tracking-wider">
-          <div className="flex items-center gap-1">EST. 2026</div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
+      {/* Visual Canvas Theme Ripple Overlay Layer */}
+      <AnimatePresence>
+        {ripple?.visible && (
+          <motion.div
+            initial={{ 
+              position: "fixed",
+              left: ripple.x,
+              top: ripple.y,
+              translateX: "-50%",
+              translateY: "-50%",
+              width: 1,
+              height: 1,
+              borderRadius: "50%",
+              zIndex: 50,
+              pointerEvents: "none"
+            }}
+            animate={{
+              scale: 3000,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.55, ease: "easeInOut" }}
+            className={ripple.targetDark ? "bg-zinc-950" : "bg-zinc-50"}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Global End-to-End Vertical Guidelines (Bounded to content layout edges) */}
+      <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-2xl h-full pointer-events-none z-10 hidden sm:block">
+        <div className="w-full h-full border-l border-r border-zinc-200/50 dark:border-zinc-900/40 relative">
+          <div className="absolute top-0 -left-[4px] text-zinc-300 dark:text-zinc-800 font-mono text-[11px]">+</div>
+          <div className="absolute top-0 -right-[4px] text-zinc-300 dark:text-zinc-800 font-mono text-[11px]">+</div>
+        </div>
+      </div>
+
+      {/* Structural Top Accent Line Grid Container */}
+      <div className="w-full border-b border-zinc-200 dark:border-zinc-900 relative z-20 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md">
+        <header className="max-w-2xl mx-auto px-6 py-5 flex items-center justify-between font-mono text-[12px] text-zinc-400 dark:text-zinc-500 tracking-wider">
+          <div className="flex items-center gap-1.5 font-bold text-zinc-700 dark:text-zinc-300">
+            <span>SYPHAX // LABS</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-[11px]">
               <Clock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
-              <span>{time || "00:00:00 GMT+00:00"}</span>
+              <span>{time || "00:00:00 GMT+05:30"}</span>
             </div>
-            <button className="flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-none border border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-zinc-500 dark:text-zinc-400 cursor-pointer"
+            >
               <Search className="w-3.5 h-3.5" />
-              <Kbd>⌘</Kbd>
-              <Kbd>K</Kbd>
+              <div className="flex items-center gap-0.5 text-[10px]">
+                <kbd className="font-mono">⌘</kbd>
+                <kbd className="font-mono">K</kbd>
+              </div>
             </button>
           </div>
         </header>
-        <span className="absolute -bottom-[5px] left-4 text-zinc-300 dark:text-zinc-800 font-mono text-[10px] select-none">+</span>
-        <span className="absolute -bottom-[5px] right-4 text-zinc-300 dark:text-zinc-800 font-mono text-[10px] select-none">+</span>
+        
+        {/* Intersection Anchor Plus Indicators */}
+        <div className="max-w-2xl mx-auto px-6 relative">
+          <span className="absolute -bottom-[6px] left-0 text-zinc-400 dark:text-zinc-700 font-mono text-[11px] select-none z-30">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-400 dark:text-zinc-700 font-mono text-[11px] select-none z-30">+</span>
+        </div>
       </div>
 
-      <main className="max-w-2xl mx-auto px-6 mt-14">
+      {/* Main Structural Layout Content Column */}
+      <main className="max-w-2xl mx-auto px-6 mt-12 relative z-20">
         
-        {/* Profile Grid / Bounding Box Structure */}
-        <BlurFade delay={0.1} inView>
-          <div className="relative border border-zinc-200 dark:border-zinc-900 rounded-2xl p-6 bg-white/40 dark:bg-zinc-900/10 backdrop-blur-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            
-            {/* Corner Crosshair Decorations */}
-            <span className="absolute -top-1.5 -left-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
-            <span className="absolute -top-1.5 -right-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
-            <span className="absolute -bottom-2 -left-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
-            <span className="absolute -bottom-2 -right-1 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
-
-            <div className="flex items-center gap-5">
-              {/* Profile Frame (Enlarged, clean of status elements) */}
-              <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-inner group cursor-pointer shrink-0">
+        {/* Hero Section Banner Panel (Flat edge structural line layout) */}
+        <div id="hero" className="border-b border-zinc-200 dark:border-zinc-900 pb-10 relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              {/* Clean Enlarged Square Profile Frame without status markers */}
+              <div className="relative w-28 h-28 rounded-none overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs shrink-0">
                 <img 
                   src="https://unavatar.io/twitter/syphax_twt" 
-                  alt="Syphax" 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  alt="Syphax Profile Avatar" 
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     e.currentTarget.nextElementSibling?.classList.remove('hidden');
                   }}
                 />
-                <div className="hidden absolute inset-0 grid place-items-center text-5xl font-serif font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-900">s</div>
+                <div className="hidden absolute inset-0 grid place-items-center text-5xl font-serif font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-900">S</div>
               </div>
 
               <div>
-                <h1 className="font-serif text-4xl font-medium tracking-tight text-zinc-800 dark:text-zinc-200">
+                <h1 className="font-serif text-4xl font-medium tracking-tight text-zinc-800 dark:text-zinc-100">
                   Syphax
                 </h1>
-                <p className="mt-1.5 text-[13.5px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wide">
-                  AI/ML Engineer // Student
+                <p className="mt-2 text-[13px] font-mono text-zinc-400 dark:text-zinc-500 tracking-wider uppercase">
+                  AI/ML Researcher & Developer
                 </p>
               </div>
             </div>
 
-            {/* Micro-interactive Theme Toggle */}
+            {/* Custom Interactive Theme Trigger Box */}
             <button
-              onClick={toggle}
-              aria-label="toggle theme"
-              className="relative w-10 h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs overflow-hidden cursor-pointer shrink-0"
+              ref={toggleRef}
+              onClick={handleThemeToggleClick}
+              aria-label="Toggle structural theme"
+              className="w-10 h-10 rounded-none border border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs cursor-pointer transition-colors relative z-30 shrink-0"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {dark ? (
-                  <motion.div
-                    key="sun"
-                    initial={{ y: 20, opacity: 0, rotate: -45 }}
-                    animate={{ y: 0, opacity: 1, rotate: 0 }}
-                    exit={{ y: -20, opacity: 0, rotate: 45 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  >
-                    <Sun className="w-4 h-4 text-zinc-400 dark:text-zinc-400" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="moon"
-                    initial={{ y: 20, opacity: 0, rotate: 45 }}
-                    animate={{ y: 0, opacity: 1, rotate: 0 }}
-                    exit={{ y: -20, opacity: 0, rotate: -45 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  >
-                    <Moon className="w-4 h-4 text-zinc-500 dark:text-zinc-500" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {dark ? <Sun className="w-4 h-4 text-zinc-400" /> : <Moon className="w-4 h-4 text-zinc-500" />}
             </button>
           </div>
-        </BlurFade>
 
-        {/* bio */}
-        <BlurFade delay={0.2} inView>
-          <div className="space-y-4 mt-10 text-[14px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+          <div className="space-y-4 mt-8 text-[14px] leading-relaxed text-zinc-600 dark:text-zinc-400 max-w-xl">
             <p>
-              I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to
-              core infrastructure, including implementing custom designs for language models.
+              I am a developer and deep learning researcher focused on Natural Language Processing (NLP), Transformer architectures, and Mixture-of-Experts (MoE) core systems.
             </p>
             <p>
-              I’m driven by the desire to build things that make an impact.
-              Currently diving into deep learning, NLP, and transformer architecture.
+              Building custom frameworks from the math up, deploying localized CPU-optimized infrastructure solutions, and engineering low-latency interfaces.
             </p>
           </div>
-        </BlurFade>
-
-        {/* tech logos stack */}
-        <BlurFade delay={0.3} inView>
-          <SectionTitle id="stack">skill / stack</SectionTitle>
-          <div className="flex flex-wrap gap-4.5">
-            {/* Python SVG */}
-            <TechIcon label="PYTHON">
-              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
-                <path d="M11.922 0c-.156.002-.312.015-.466.037L5.056 1.012c-.93.134-1.64.887-1.706 1.823v2.85h3.393V4.316a.434.434 0 0 1 .435-.435h6.786a.434.434 0 0 1 .435.435v2.302H9.288c-.99 0-1.79.802-1.79 1.792v2.816H4.351A2.164 2.164 0 0 0 2.19 13.38v5.526a2.162 2.162 0 0 0 2.16 2.163h2.302v-3.393h1.369a.435.435 0 0 1 .435.435v6.786c0 .6.49 1.091 1.09 1.091h3.1a2.16 2.16 0 0 0 2.163-2.16v-2.852h-3.393V19.67a.435.435 0 0 1 .435-.435h6.786a.435.435 0 0 1 .435.435v-2.302h5.111c.99 0 1.79-.802 1.79-1.792v-2.816h3.147a2.164 2.164 0 0 0 2.161-2.161V5.074A2.162 2.162 0 0 0 19.65 2.91h-2.302v3.393h-1.369a.434.434 0 0 1-.435-.435V.916A1.1 1.1 0 0 0 14.453 0h-2.531zm-2.84 2.13a.627.627 0 1 1 0 1.253.627.627 0 0 1 0-1.253zm5.498 18.423a.627.627 0 1 1 0 1.254.627.627 0 0 1 0-1.254z"/>
-              </svg>
-            </TechIcon>
-
-            {/* PyTorch SVG */}
-            <TechIcon label="PYTORCH">
-              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
-                <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm3.89 17.5a1.86 1.86 0 0 1-1.36.56H9.47a1.88 1.88 0 0 1-1.37-.56 2.2 2.2 0 0 1-.53-1.53V9.45a2.22 2.22 0 0 1 .53-1.54 1.88 1.88 0 0 1 1.37-.56h4.51c.54 0 1 .19 1.36.56a2.24 2.24 0 0 1 .54 1.54V16a2.22 2.22 0 0 1-.53 1.5zm-1.12-6.57a1.05 1.05 0 0 0-.74-.28H9.97a1.05 1.05 0 0 0-.74.28 1.2 1.2 0 0 0-.29.87v1.54a1.2 1.2 0 0 0 .29.87 1.05 1.05 0 0 0 .74.28h4.01a1.05 1.05 0 0 0 .74-.28 1.2 1.2 0 0 0 .29-.87V11.8a1.2 1.2 0 0 0-.29-.87z"/>
-              </svg>
-            </TechIcon>
-
-            {/* TensorFlow SVG */}
-            <TechIcon label="TENSORFLOW">
-              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
-                <path d="M12.4 0L3.1 5.4v10.8l9.3 5.4 9.3-5.4V5.4L12.4 0zm7.1 15.1l-7.1 4.1-7.1-4.1V7.1l7.1-4.1 7.1 4.1v8zm-3.6-6.6h-7v1.9h2.3V14h2.3v-3.6h2.4V8.5z"/>
-              </svg>
-            </TechIcon>
-
-            {/* Scikit-Learn SVG */}
-            <TechIcon label="SCIKIT-LEARN">
-              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
-                <path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm1 14.5h-2v-5h2v5zm0-6.5h-2V8h2v2z"/>
-              </svg>
-            </TechIcon>
-
-            {/* Hugging Face SVG */}
-            <TechIcon label="HUGGING FACE">
-              <svg className="w-7 h-7 text-zinc-600 dark:text-zinc-400 fill-current" viewBox="0 0 24 24">
-                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 15a5 5 0 0 1-4-2h8a5 5 0 0 1-4 2zm-2.5-6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-              </svg>
-            </TechIcon>
-          </div>
-        </BlurFade>
-
-        {/* Featured Work with Interactive GitHub Year Toggle */}
-        <BlurFade delay={0.4} inView>
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
-            <SectionTitle id="projects">Projects</SectionTitle>
-            
-            {/* Year Archive Selector */}
-            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 rounded-lg text-[12px] font-mono shadow-xs self-start sm:self-auto mb-4 sm:mb-0">
-              {(["2026", "2025"] as const).map((year) => (
-                <button
-                  key={year}
-                  onClick={() => setActiveYear(year)}
-                  className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
-                    activeYear === year
-                      ? "bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold shadow-xs"
-                      : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400"
-                  }`}
-                >
-                  {year}
-                </button>
-              ))}
-            </div>
-          </div>
-          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">Core architectures and ML tooling I've built or collaborated on.</p>
           
-          <div className="mt-3 min-h-[160px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeYear}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.15 }}
-              >
-                {githubProjects[activeYear].map((project) => (
-                  <ProjectRow 
-                    key={project.title}
-                    title={project.title}
-                    repo={project.repo}
-                    url={project.url}
-                    desc={project.desc}
-                  />
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </BlurFade>
+          {/* Bottom Section Corner Markers */}
+          <span className="absolute -bottom-[6px] left-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+        </div>
 
-        {/* experience */}
-        <BlurFade delay={0.5} inView>
-          <SectionTitle id="experience">experience</SectionTitle>
-          <div className="mt-3">
-            <ExperienceItem
-              date="nov 2025 — may 2026"
-              role="AI/ML Intern & Engineer"
-              org="Manglan Labs"
-              body="Worked collaboratively with a research group to design, research, and implement new small-sized model architectures."
-            />
+        {/* Skill / Core Tech Stack Section */}
+        <div id="stack" className="border-b border-zinc-200 dark:border-zinc-900 pb-10 relative">
+          <div className="font-mono flex items-center gap-2 text-[16px] tracking-widest uppercase text-zinc-800 dark:text-zinc-200 font-semibold mt-12 mb-6">
+            <span>[S] Skill // Stack</span>
           </div>
-        </BlurFade>
-
-        {/* recent reads */}
-        <BlurFade delay={0.6} inView>
-          <SectionTitle id="reads">recent reads</SectionTitle>
-          <p className="text-[13px] text-zinc-400 dark:text-zinc-500 mb-4 -mt-2">Research papers and insights I am currently exploring.</p>
-          <div className="grid md:grid-cols-3 gap-2.5">
+          
+          <div className="flex flex-wrap gap-5">
             {[
-              { d: "Research", t: "Efficient Estimation of Word Representations in Vector Space", href: "#reads" },
-              { d: "Research", t: "Attention Is All You Need: Fundamentals of Transformers", href: "#reads" },
-              { d: "Research", t: "Outrageously Large Neural Networks: Sparsely-Gated MoE", href: "#reads" },
-            ].map((w) => (
-              <a key={w.t} href={w.href} className="border border-zinc-200 dark:border-zinc-900 rounded-xl p-3.5 bg-white/30 dark:bg-zinc-900/10 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700 transition flex flex-col gap-2">
-                <div className="font-mono text-[11px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5"><BookOpen className="w-3 h-3"/> {w.d}</div>
-                <div className="text-[13.5px] leading-snug text-zinc-700 dark:text-zinc-300">{w.t}</div>
+              { name: "PYTHON", img: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" },
+              { name: "PYTORCH", img: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/pytorch/pytorch-original.svg" },
+              { name: "TENSORFLOW", img: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tensorflow/tensorflow-original.svg" },
+              { name: "SCIKIT-LEARN", img: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/scikit/scikit-original.svg" },
+              { name: "HUGGINGFACE", img: "https://api.iconify.design/logos:huggingface.svg" }
+            ].map((tech) => (
+              <div key={tech.name} className="relative group flex flex-col items-center">
+                {/* Tooltip on top matching Reference image behaviors */}
+                <div className="absolute bottom-full mb-2 flex flex-col items-center pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-150 transform translate-y-1 group-hover:translate-y-0 z-30">
+                  <div className="bg-zinc-900 dark:bg-zinc-100 border border-zinc-800 dark:border-zinc-200 rounded-sm px-2.5 py-1 text-[10px] font-mono font-bold tracking-widest text-zinc-100 dark:text-zinc-900 shadow-md whitespace-nowrap">
+                    {tech.name}
+                  </div>
+                  <div className="w-1.5 h-1.5 bg-zinc-900 dark:bg-zinc-100 rotate-45 -mt-1" />
+                </div>
+                
+                {/* Actual colored icon frame */}
+                <div className="w-14 h-14 rounded-none flex items-center justify-center border border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900/30 shadow-xs transition-all duration-200 group-hover:border-zinc-400 dark:group-hover:border-zinc-700 group-hover:bg-zinc-100/50 dark:group-hover:bg-zinc-900/80">
+                  <img src={tech.img} alt={`${tech.name} Logo`} className="w-7 h-7 object-contain grayscale-20 group-hover:grayscale-0 transition-all duration-200" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <span className="absolute -bottom-[6px] left-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+        </div>
+
+        {/* Flat Projects Portfolio Stream (No Year Toggle Interferences) */}
+        <div id="projects" className="border-b border-zinc-200 dark:border-zinc-900 pb-10 relative">
+          <div className="font-mono flex items-center gap-2 text-[16px] tracking-widest uppercase text-zinc-800 dark:text-zinc-200 font-semibold mt-12 mb-4">
+            <span>[P] Projects</span>
+          </div>
+          
+          <div className="divide-y divide-zinc-200 dark:divide-zinc-900">
+            {[
+              { title: "Wikitext-MoE-40M", repo: "rkcode2025/Wikitext-MoE-40M", url: "https://github.com/rkcode2025/Wikitext-MoE-40M", desc: "A 109M parameter transformer architecture optimized on wikitext topologies, achieving a benchmarked test perplexity score of 35.34." },
+              { title: "AI-Authenticator (AiAuth)", repo: "rkcode2025/AiAuth", url: "https://huggingface.co/spaces", desc: "Synthetic media authentication platform engineered to spot deepfakes and algorithmic generation signatures, hosted live via Hugging Face Spaces." },
+              { title: "XTRAIN", repo: "MangalanLabs/XTRAIN", url: "https://github.com/MangalanLabs/XTRAIN", desc: "A custom CPU-optimized training runtime architecture written entirely from basic mathematical matrix foundations, omitting third-party optimization dependencies." }
+            ].map((p) => (
+              <a key={p.title} href={p.url} target="_blank" rel="noreferrer" className="group flex flex-col gap-1 py-5 block hover:bg-zinc-100/40 dark:hover:bg-zinc-900/20 -mx-2 px-2 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[15px] font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-950 dark:group-hover:text-zinc-100">{p.title}</span>
+                  <ArrowUpRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-800 dark:group-hover:text-zinc-300 transition-colors" />
+                </div>
+                <span className="text-[11.5px] font-mono text-zinc-400 dark:text-zinc-500">{p.repo}</span>
+                <p className="text-[13.5px] text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed">{p.desc}</p>
               </a>
             ))}
           </div>
-        </BlurFade>
+          <span className="absolute -bottom-[6px] left-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+        </div>
 
-        {/* Contact Redesigned Layout matching Reference 3 */}
-        <BlurFade delay={0.7} inView>
-          <SectionTitle id="contact">contact</SectionTitle>
+        {/* Experience Section */}
+        <div id="experience" className="border-b border-zinc-200 dark:border-zinc-900 pb-10 relative">
+          <div className="font-mono flex items-center gap-2 text-[16px] tracking-widest uppercase text-zinc-800 dark:text-zinc-200 font-semibold mt-12 mb-4">
+            <span>[E] Experience</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-2 md:gap-4 py-4">
+            <span className="font-mono text-[12px] text-zinc-400 dark:text-zinc-500 pt-0.5">2025 — PRESENT</span>
+            <div>
+              <h3 className="text-[15px] text-zinc-800 dark:text-zinc-200 font-medium">
+                AI/ML Architecture Researcher <span className="text-zinc-400 dark:text-zinc-600 font-mono text-[13px]">@ Mangalan Labs</span>
+              </h3>
+              <p className="text-[13.5px] text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">
+                Co-developing small-scale high-efficiency deep learning pipelines, custom language model tokens matrices, and CPU training matrices.
+              </p>
+            </div>
+          </div>
+          <span className="absolute -bottom-[6px] left-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+        </div>
+
+        {/* Authentic GitHub Contribution Section matching image reference layout */}
+        <div id="github-graph" className="border-b border-zinc-200 dark:border-zinc-900 pb-10 relative">
+          <div className="font-mono flex items-center gap-2 text-[16px] tracking-widest uppercase text-zinc-800 dark:text-zinc-200 font-semibold mt-12 mb-2">
+            <span>[G] Contribution Matrix</span>
+          </div>
+
+          <div className="mt-4 border border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900/20 p-5">
+            {/* Headers mapping months */}
+            <div className="flex justify-between text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mb-2 px-1">
+              <span>jan</span><span>feb</span><span>mar</span><span>apr</span><span>may</span><span>jun</span>
+              <span>jul</span><span>aug</span><span>sep</span><span>oct</span><span>nov</span><span>dec</span>
+            </div>
+
+            {/* Matrix Block Columns mapping */}
+            <div className="flex justify-between gap-[2px] overflow-x-auto pb-2 scrollbar-none">
+              {gridData.map((col, cIdx) => (
+                <div key={cIdx} className="flex flex-col gap-[2px] shrink-0">
+                  {col.map((level, rIdx) => {
+                    let bgClass = "bg-zinc-100 dark:bg-zinc-900"; // Empty block / future
+                    if (level === 1) bgClass = "bg-green-200 dark:bg-green-950/60";
+                    if (level === 2) bgClass = "bg-green-300 dark:bg-green-800/60";
+                    if (level === 3) bgClass = "bg-green-500 dark:bg-green-600";
+                    if (level === 4) bgClass = "bg-green-700 dark:bg-green-400";
+                    if (level === -1) bgClass = "bg-zinc-100/40 dark:bg-zinc-900/20"; // unreached dates
+
+                    return (
+                      <div 
+                        key={rIdx} 
+                        className={`w-[11px] h-[11px] transition-colors duration-150 ${bgClass}`} 
+                        title={`Activity weight factor: ${level >= 0 ? level : 0}`}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {/* Total Metric Stats Footer row matching reference view */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[12px] font-mono text-zinc-400 dark:text-zinc-500 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-900/60 gap-3">
+              <span>1,481 contributions in the last year</span>
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <span>less</span>
+                <div className="w-2.5 h-2.5 bg-zinc-100 dark:bg-zinc-900" />
+                <div className="w-2.5 h-2.5 bg-green-200 dark:bg-green-950" />
+                <div className="w-2.5 h-2.5 bg-green-300 dark:bg-green-800" />
+                <div className="w-2.5 h-2.5 bg-green-500 dark:bg-green-600" />
+                <div className="w-2.5 h-2.5 bg-green-700 dark:bg-green-400" />
+                <span>more</span>
+              </div>
+            </div>
+          </div>
+
+          {/* GitHub Style Year Selector Buttons underneath heatmap matrix */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-5">
+            {(["2026", "2025", "2024", "2023", "2022"] as const).map((year) => (
+              <button
+                key={year}
+                onClick={() => setActiveYear(year)}
+                className={`px-4 py-1.5 text-[12px] font-mono border transition-all cursor-pointer ${
+                  activeYear === year
+                    ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 font-bold"
+                    : "border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+          <span className="absolute -bottom-[6px] left-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+        </div>
+
+        {/* Recent Reads Section */}
+        <div id="reads" className="border-b border-zinc-200 dark:border-zinc-900 pb-10 relative">
+          <div className="font-mono flex items-center gap-2 text-[16px] tracking-widest uppercase text-zinc-800 dark:text-zinc-200 font-semibold mt-12 mb-4">
+            <span>[R] Recent Reads</span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { t: "Efficient Estimation of Word Representations in Vector Space", author: "Mikolov et al." },
+              { t: "Attention Is All You Need", author: "Vaswani et al." },
+              { t: "Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer", author: "Shazeer et al." }
+            ].map((paper) => (
+              <div key={paper.t} className="border border-zinc-200 dark:border-zinc-900 p-4 bg-white dark:bg-zinc-900/10 hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors">
+                <div className="flex items-start gap-2 text-zinc-400 dark:text-zinc-500 mb-1.5 font-mono text-[11px]">
+                  <BookOpen className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>RESEARCH LABS</span>
+                </div>
+                <h4 className="text-[13.5px] font-medium text-zinc-700 dark:text-zinc-300 leading-snug">{paper.t}</h4>
+                <span className="block mt-2 text-[11px] font-mono text-zinc-400 dark:text-zinc-500">{paper.author}</span>
+              </div>
+            ))}
+          </div>
+          <span className="absolute -bottom-[6px] left-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+          <span className="absolute -bottom-[6px] right-0 text-zinc-300 dark:text-zinc-800 font-mono text-[11px] select-none">+</span>
+        </div>
+
+        {/* End-to-End Contact Channel Layout matching Reference Image 3 */}
+        <div id="contact" className="pb-4">
+          <div className="font-mono flex items-center gap-2 text-[16px] tracking-widest uppercase text-zinc-800 dark:text-zinc-200 font-semibold mt-12 mb-4">
+            <span>[C] Contact</span>
+          </div>
+          
           <div className="w-full border-t border-zinc-200 dark:border-zinc-900 mt-2">
             {[
-              { I: Mail, label: "email", v: "dev@avhi.in", url: "mailto:syphaxtwt2025@gmail.com" },
-              { I: Twitter, label: "x.com", v: "@syphax_twt", url: "https://x.com/syphax_twt" },
-              { I: Github, label: "github", v: "rkcode2025", url: "https://github.com/rkcode2025" },
-            ].map(({ I, label, v, url }) => (
+              { label: "email", val: "dev@avhi.in", link: "mailto:syphaxtwt2025@gmail.com" },
+              { label: "x.com", val: "@syphax_twt", link: "https://x.com/syphax_twt" },
+              { label: "github", val: "@rkcode2025", link: "https://github.com/rkcode2025" }
+            ].map((chan) => (
               <a 
-                key={label} 
-                href={url} 
+                key={chan.label} 
+                href={chan.link} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="group flex items-center justify-between py-4 border-b border-zinc-200 dark:border-zinc-900 hover:bg-zinc-100/30 dark:hover:bg-zinc-900/20 px-2 rounded-md transition-colors"
+                className="group flex items-center justify-between py-4 border-b border-zinc-200 dark:border-zinc-900 px-1 hover:bg-zinc-100/30 dark:hover:bg-zinc-900/10 transition-colors"
               >
-                {/* Left Side: Icon and Label Name */}
-                <div className="flex items-center gap-3">
-                  <I className="w-4 h-4 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors" />
-                  <span className="text-[14px] text-zinc-700 dark:text-zinc-300 font-mono tracking-wide">{label}</span>
-                </div>
-                
-                {/* Right Side: Identity Handle and Outbound Arrow */}
-                <div className="flex items-center gap-1.5 text-right font-mono">
-                  <span className="text-[14px] text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{v}</span>
+                <span className="text-[14px] text-zinc-700 dark:text-zinc-300 font-mono tracking-wide">{chan.label}</span>
+                <div className="flex items-center gap-1.5 font-mono text-right">
+                  <span className="text-[14px] text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{chan.val}</span>
                   <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors" />
                 </div>
               </a>
             ))}
           </div>
-        </BlurFade>
+        </div>
 
-        {/* footer */}
-        <BlurFade delay={0.8} inView>
-          <footer className="mt-24 flex flex-col items-center gap-1.5 font-mono text-[11px] text-zinc-400 dark:text-zinc-600">
-            <div className="flex items-center gap-2">
-              <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">built with tanstack</a>
-              <span>·</span>
-              <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">rss</a>
-              <span>·</span>
-              <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">sitemap</a>
-            </div>
-            <div>© 2026 syphax</div>
-          </footer>
-        </BlurFade>
+        {/* Minimal Footer view */}
+        <footer className="mt-20 flex flex-col items-center gap-1 font-mono text-[11px] text-zinc-400 dark:text-zinc-600">
+          <div className="flex items-center gap-2">
+            <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400">built with tanstack</a>
+            <span>·</span>
+            <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400">rss</a>
+            <span>·</span>
+            <a href="#" className="hover:text-zinc-600 dark:hover:text-zinc-400">sitemap</a>
+          </div>
+          <div className="mt-1">© 2026 SYPHAX</div>
+        </footer>
       </main>
+
+      {/* Active Command Search Dialog Modal View Layer */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4">
+            {/* Backdrop layer */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSearchOpen(false)}
+              className="absolute inset-0 bg-zinc-950/40 backdrop-blur-xs"
+            />
+            
+            {/* Modal Box */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.97, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -8 }}
+              transition={{ duration: 0.16 }}
+              className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xl relative z-10 overflow-hidden font-mono"
+            >
+              <div className="flex items-center gap-3 px-4 border-b border-zinc-200 dark:border-zinc-800">
+                <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+                <input 
+                  autoFocus
+                  type="text"
+                  placeholder="Type a section or keyword to jump..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full py-4 text-[14px] bg-transparent text-zinc-800 dark:text-zinc-100 outline-none border-none placeholder-zinc-400"
+                />
+                <button 
+                  onClick={() => setIsSearchOpen(false)}
+                  className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 border border-zinc-200 dark:border-zinc-700 text-zinc-400"
+                >
+                  ESC
+                </button>
+              </div>
+
+              <div className="max-h-[300px] overflow-y-auto p-2">
+                {filteredSearchItems.length > 0 ? (
+                  filteredSearchItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => navigateToSection(item.id)}
+                      className="w-full text-left p-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 flex flex-col gap-0.5 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between text-[13px]">
+                        <span className="text-zinc-800 dark:text-zinc-200 font-medium group-hover:text-zinc-950 dark:group-hover:text-zinc-100">{item.title}</span>
+                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-800 px-1.5 uppercase tracking-wide">{item.type}</span>
+                      </div>
+                      {item.desc && (
+                        <span className="text-[11.5px] text-zinc-400 dark:text-zinc-500 truncate">{item.desc}</span>
+                      )}
+                    </button>
+                    ))
+                ) : (
+                  <div className="p-4 text-center text-zinc-400 text-[12px]">
+                    No index matching content filters.
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
