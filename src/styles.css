@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -5,7 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
   --color-background: var(--background);
@@ -42,8 +44,8 @@
 }
 
 .dark {
-  /* Eerie black base */
-  --background: #1B1B1B;
+  /* Near-black base */
+  --background: #121212;
 
   /* Text and low‑contrast foregrounds */
   --foreground: oklch(0.95 0.005 260);
@@ -52,12 +54,12 @@
   --accent-foreground: oklch(0.95 0.005 260);
   --primary-foreground: oklch(0.95 0.005 260);
 
-  /* Elevated surfaces (all lighter than background) */
-  --muted: #242424;       /* secondary background / hover */
-  --card: #222222;        /* card surface */
-  --primary: #222222;     /* main interactive surface */
-  --accent: #282828;      /* subtle accent */
-  --border: #2E2E2E;      /* borders and dividers */
+  /* Elevated surfaces (all lighter than #121212) */
+  --muted: #1a1a1a;       /* subtle background for hover / secondary */
+  --card: #181818;        /* cards */
+  --primary: #181818;     /* primary surfaces */
+  --accent: #1f1f1f;      /* accents */
+  --border: #262626;      /* borders & dividers */
 
   /* Badge / link */
   --badge: oklch(0.25 0.05 300);
@@ -73,16 +75,13 @@
     font-family: var(--font-sans);
     font-weight: 500;
 
-    /* ----- Scrollbar removal ----- */
+    /* Scrollbar hiding */
     overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  /* Hide scrollbar in WebKit */
-  html::-webkit-scrollbar {
-    display: none;
-  }
+  html::-webkit-scrollbar,
   body::-webkit-scrollbar {
     display: none;
   }
