@@ -86,11 +86,11 @@ function TechIcon({ label, iconElement, imgSrc }: { label: string; iconElement?:
           {label}
         </div>
       </div>
-      <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-muted/50 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:bg-muted">
+      <div className="flex items-center justify-center transition-all duration-300 group-hover:scale-110 p-1">
         {iconElement ? (
           iconElement
         ) : (
-          <img src={imgSrc} alt={label} className="w-7 h-7 object-contain select-none pointer-events-none" />
+          <img src={imgSrc} alt={label} className="w-8 h-8 object-contain select-none pointer-events-none" />
         )}
       </div>
     </div>
@@ -132,19 +132,13 @@ function ExperienceItem({ date, role, org, body }: { date: string; role: string;
   );
 }
 
-// GitHub Heatmap redesigned to fully match image_db358a.png without scrollbars
 function GitHubHeatmap() {
   const [data, setData] = useState<Record<string, number>>({});
-  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [weeks, setWeeks] = useState<{ date: Date; count: number }[][]>([]);
-  const [lastCommit, setLastCommit] = useState<{ message: string; repo: string; time: string } | null>(null);
-  const [shippedToday, setShippedToday] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    
-    // Fetch contribution data
     fetch(`https://gh-contributions-api.vercel.app/api/rkcode2025`)
       .then(res => {
         if (!res.ok) throw new Error(`API error ${res.status}`);
@@ -152,234 +146,111 @@ function GitHubHeatmap() {
       })
       .then(json => {
         const contributionsArr = json.contributions || [];
+        if (contributionsArr.length === 0) throw new Error("Empty contributions");
         const contributionsMap: Record<string, number> = {};
-        let total = 0;
-        const todayStr = new Date().toISOString().split('T')[0];
-        let hasShippedToday = false;
-
         contributionsArr.forEach((c: any) => {
           contributionsMap[c.date] = c.count;
-          total += c.count;
-          if (c.date === todayStr && c.count > 0) {
-            hasShippedToday = true;
-          }
         });
-        
         setData(contributionsMap);
-        setTotalCount(total || json.total?.currentYear || 0);
-        setShippedToday(hasShippedToday);
       })
       .catch(err => {
-        console.warn("Contribution API lookup deferred; mapping fallback layout structural matrix.", err);
+        console.warn("API failed, using dummy data", err);
         const endDate = new Date();
         const startDate = new Date();
-        startDate.setFullYear(startDate.getFullYear() - 1);
+        startDate.setMonth(startDate.getMonth() - 6);
         const dummy: Record<string, number> = {};
         let cur = new Date(startDate);
-        let total = 0;
         while (cur <= endDate) {
           const dateStr = cur.toISOString().split('T')[0];
           const rand = Math.random();
           let count = 0;
-          if (rand > 0.8) count = Math.floor(Math.random() * 6) + 1;
-          if (count > 0) total += count;
+          if (rand < 0.6) count = 0;
+          else if (rand < 0.8) count = Math.floor(Math.random() * 3) + 1;
+          else if (rand < 0.95) count = Math.floor(Math.random() * 4) + 3;
+          else count = Math.floor(Math.random() * 5) + 7;
           dummy[dateStr] = count;
           cur.setDate(cur.getDate() + 1);
         }
         setData(dummy);
-        setTotalCount(total || 567);
       })
       .finally(() => setLoading(false));
-
-    // Fetch latest user commit strings directly from Github API nodes
-    fetch('https://api.github.com/users/rkcode2025/events/public')
-      .then(res => res.json())
-      .then(events => {
-        const pushEvent = Array.isArray(events) ? events.find((e: any) => e.type === "PushEvent") : null;
-        if (pushEvent && pushEvent.payload?.commits?.length > 0) {
-          const msg = pushEvent.payload.commits[0].message;
-          const repoName = pushEvent.repo.name.split('/')[1] || pushEvent.repo.name;
-          const createdDate = new Date(pushEvent.created_at);
-          const diffMs = new Date().getTime() - createdDate.getTime();
-          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-          
-          let timeStr = "recently";
-          if (diffDays > 0) timeStr = `${diffDays}d ago`;
-          else if (diffHours > 0) timeStr = `${diffHours}h ago`;
-          else timeStr = "just now";
-
-          if (diffDays === 0) setShippedToday(true);
-          setLastCommit({ message: msg, repo: repoName, time: timeStr });
-        } else {
-          setLastCommit({
-            message: "feat: redesign hero avatar as Dev ID card",
-            repo: "portfolio",
-            time: "1d ago"
-          });
-        }
-      })
-      .catch(() => {
-        setLastCommit({
-          message: "feat: redesign hero avatar as Dev ID card",
-          repo: "portfolio",
-          time: "1d ago"
-        });
-      });
   }, []);
 
   useEffect(() => {
     if (loading) return;
-    
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setFullYear(startDate.getFullYear() - 1);
+    startDate.setMonth(startDate.getMonth() - 6);
     
-    // Grid alignment parameters tracking preceding Sunday columns
-    const startDay = startDate.getDay();
-    startDate.setDate(startDate.getDate() - startDay);
-
     const weeksArray: { date: Date; count: number }[][] = [];
     let currentWeek: { date: Date; count: number }[] = [];
     let currentDate = new Date(startDate);
-
-    while (currentDate <= endDate || weeksArray.length < 53) {
+    
+    while (currentDate <= endDate) {
       const dateStr = currentDate.toISOString().split('T')[0];
       const count = data[dateStr] || 0;
       currentWeek.push({ date: new Date(currentDate), count });
-
-      if (currentWeek.length === 7) {
+      
+      if (currentDate.getDay() === 6 || currentDate.toDateString() === endDate.toDateString()) {
         weeksArray.push(currentWeek);
         currentWeek = [];
       }
       currentDate.setDate(currentDate.getDate() + 1);
-      if (weeksArray.length >= 53 && currentWeek.length === 0) break;
     }
-    
     setWeeks(weeksArray);
   }, [data, loading]);
 
   const getColorClass = (count: number) => {
-    if (count === 0) return "bg-[#181d26]";
-    if (count <= 2) return "bg-[#123e37]";
-    if (count <= 4) return "bg-[#166357]";
-    if (count <= 6) return "bg-[#1cb199]";
-    return "bg-[#33f3cd] shadow-[0_0_8px_rgba(51,243,205,0.35)]";
+    if (count === 0) return "bg-muted";
+    if (count <= 2) return "bg-emerald-200 dark:bg-emerald-900/60";
+    if (count <= 4) return "bg-emerald-400 dark:bg-emerald-700";
+    if (count <= 6) return "bg-emerald-600 dark:bg-emerald-500";
+    return "bg-emerald-800 dark:bg-emerald-400";
   };
 
   if (loading) {
     return (
-      <div className="py-12 text-center text-[#33f3cd] text-xs font-mono bg-[#11151d] border border-zinc-800 rounded-2xl">
-        <span className="animate-pulse">loading structural contribution layers...</span>
+      <div className="py-8 text-center text-muted-foreground text-sm font-mono">
+        loading contribution matrix...
       </div>
     );
   }
 
-  // Generate non-overlapping month markers directly mapping matrix grids
-  let renderedMonths: Record<string, boolean> = {};
+  if (weeks.length === 0) {
+    return (
+      <div className="py-8 text-center text-muted-foreground text-sm font-mono">
+        No contribution data available.
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full bg-[#11151d] border border-zinc-800/80 rounded-2xl p-5 md:p-6 text-slate-300 font-mono shadow-2xl select-none">
-      {/* Top Header Card Block */}
-      <div className="flex items-center justify-between pb-4 border-b border-zinc-800/50 mb-5">
-        <div className="flex items-center gap-2 text-xs tracking-widest text-slate-200 font-bold uppercase">
-          <Github className="w-4 h-4 text-slate-400" />
-          <span>Contribution Graph</span>
+    <div className="w-full overflow-x-auto scrollbar-none">
+      <div className="min-w-[720px]">
+        <div className="flex gap-[3px]">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex flex-col gap-[3px]">
+              {week.map((day, di) => (
+                <div
+                  key={di}
+                  className={`w-3 h-3 rounded-sm ${getColorClass(day.count)} transition-all hover:scale-110 hover:shadow-sm`}
+                  title={`${day.date.toDateString()}: ${day.count} contribution${day.count !== 1 ? 's' : ''}`}
+                />
+              ))}
+            </div>
+          ))}
         </div>
-        <div className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-md border flex items-center gap-2 transition-all duration-300 ${
-          shippedToday 
-            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" 
-            : "border-zinc-800 bg-zinc-900/40 text-zinc-500"
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${shippedToday ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"}`} />
-          <span>shipped today</span>
+        <div className="flex justify-end items-center gap-2 mt-4 text-[10px] font-mono text-muted-foreground">
+          <span>Less</span>
+          <div className="w-2.5 h-2.5 rounded-sm bg-muted" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-200 dark:bg-emerald-900/60" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-400 dark:bg-emerald-700" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-600 dark:bg-emerald-500" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-800 dark:bg-emerald-400" />
+          <span>More</span>
         </div>
-      </div>
-
-      {/* Primary Matrix Board Layer */}
-      <div className="w-full flex flex-col overflow-visible">
-        
-        {/* Months Label Row */}
-        <div className="flex gap-[2px] w-full text-[9px] text-zinc-600 mb-1">
-          <div className="w-7 shrink-0" />
-          <div className="flex flex-1 justify-between gap-[2px]">
-            {weeks.map((week, wi) => {
-              const firstDay = week[0]?.date;
-              const monthName = firstDay ? firstDay.toLocaleString('en-US', { month: 'short' }) : '';
-              let showMonth = false;
-              if (monthName && !renderedMonths[monthName]) {
-                renderedMonths[monthName] = true;
-                showMonth = true;
-              }
-              return (
-                <div key={wi} className="flex-1 relative h-3 min-w-0">
-                  {showMonth && (
-                    <span className="absolute left-0 top-0 whitespace-nowrap text-[9px]">
-                      {monthName}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mid Container Core Structure */}
-        <div className="flex gap-[3px] w-full">
-          {/* Days Indicator Sidebar */}
-          <div className="grid grid-rows-7 text-[9px] text-zinc-600 pr-1.5 w-7 h-[76px] leading-none items-center">
-            <div />
-            <div>Mon</div>
-            <div />
-            <div>Wed</div>
-            <div />
-            <div>Fri</div>
-            <div />
-          </div>
-
-          {/* Grid Blocks */}
-          <div className="flex flex-1 justify-between gap-[2px] h-[76px]">
-            {weeks.map((week, wi) => (
-              <div key={wi} className="grid grid-rows-7 gap-[2px] flex-1">
-                {week.map((day, di) => (
-                  <div
-                    key={di}
-                    className={`rounded-[1.5px] ${getColorClass(day.count)} transition-all hover:scale-125 hover:z-10`}
-                    style={{ aspectRatio: "1/1" }}
-                    title={`${day.date.toDateString()}: ${day.count} commit${day.count !== 1 ? 's' : ''}`}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-
-      {/* Dynamic Activity Feed Commit Trace */}
-      {lastCommit && (
-        <div className="mt-5 text-[11px] text-zinc-400 border-t border-zinc-800/40 pt-4 flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-          <span className="text-zinc-500 font-mono">last shipped:</span>
-          <span className="text-zinc-300 font-medium truncate">{lastCommit.message}</span>
-          <span className="text-zinc-500">→</span>
-          <span className="text-[#33f3cd] font-semibold">{lastCommit.repo}</span>
-          <span className="text-zinc-500 text-[10px]">, {lastCommit.time}</span>
-        </div>
-      )}
-
-      {/* Bottom Counter Footer Blocks */}
-      <div className="flex items-center justify-between mt-5 pt-1">
-        <div className="text-xs font-mono text-zinc-400">
-          <span className="text-[#33f3cd] font-bold tracking-wide">{totalCount}</span> contributions
-        </div>
-        <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-zinc-500 bg-[#0a0d14] border border-zinc-800/60 px-2.5 py-1 rounded-md">
-          <span>less</span>
-          <div className="w-2 h-2 rounded-[1px] bg-[#181d26]" />
-          <div className="w-2 h-2 rounded-[1px] bg-[#123e37]" />
-          <div className="w-2 h-2 rounded-[1px] bg-[#166357]" />
-          <div className="w-2 h-2 rounded-[1px] bg-[#1cb199]" />
-          <div className="w-2 h-2 rounded-[1px] bg-[#33f3cd]" />
-          <span>more</span>
+        <div className="text-right text-[10px] font-mono text-muted-foreground mt-2">
+          Last 6 months
         </div>
       </div>
     </div>
@@ -551,12 +422,11 @@ function Index() {
                     </g>
                   </svg>
                 </div>
-                <p className="mt-3 text-[13px] font-mono text-muted-foreground tracking-wide">
+                <p className="mt-3 text-[14.5px] font-mono text-muted-foreground tracking-wider">
                   AI/ML Engineer // Student
                 </p>
               </div>
             </div>
-            {/* Theme toggle */}
             <button
               onClick={handleThemeToggle}
               aria-label="toggle theme"
@@ -589,18 +459,17 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Bio */}
         <BlurFade delay={0.2} inView>
-          <div className="space-y-4 mt-10 text-[14px] leading-relaxed text-muted-foreground">
+          <div className="space-y-0 mt-0 text-[15.5px] leading-relaxed text-muted-foreground">
             <p>I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to core infrastructure, including implementing custom designs for language models.</p>
             <p>I’m driven by the desire to build things that make an impact. Currently diving into deep learning, NLP, and transformer architecture.</p>
           </div>
         </BlurFade>
 
-        {/* Skill stack */}
+        {/* Skill stack without boxes */}
         <BlurFade delay={0.3} inView>
           <SectionTitle id="stack" shortcut="s">skill / stack</SectionTitle>
-          <div className="flex flex-wrap gap-4.5">
+          <div className="flex flex-wrap gap-x-6 gap-y-4">
             <TechIcon label="PYTHON" imgSrc="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" />
             <TechIcon label="PYTORCH" imgSrc="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pytorch/pytorch-original.svg" />
             <TechIcon label="TENSORFLOW" imgSrc="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tensorflow/tensorflow-original.svg" />
@@ -609,7 +478,6 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Projects */}
         <BlurFade delay={0.4} inView>
           <SectionTitle id="projects" shortcut="p">Projects</SectionTitle>
           <p className="text-[13px] text-muted-foreground mb-4 -mt-2">Core architectures and ML tooling I've built or collaborated on.</p>
@@ -618,18 +486,16 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* GitHub graph section matching image_db358a.png */}
         <BlurFade delay={0.45} inView>
           <SectionTitle id="github-stats" shortcut="g">github contribution matrix</SectionTitle>
           <p className="text-[13px] text-muted-foreground mb-6 -mt-2">
-            Activity trace for <span className="font-mono text-foreground">rkcode2025</span>
+            Activity trace for <span className="font-mono text-foreground">rkcode2025</span> (last 6 months)
           </p>
-          <div className="relative overflow-visible rounded-3xl">
+          <div className="relative overflow-hidden rounded-3xl py-4">
             <GitHubHeatmap />
           </div>
         </BlurFade>
 
-        {/* Experience */}
         <BlurFade delay={0.5} inView>
           <SectionTitle id="experience" shortcut="e">experience</SectionTitle>
           <div className="mt-3">
@@ -637,7 +503,6 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Recent reads */}
         <BlurFade delay={0.6} inView>
           <SectionTitle id="reads" shortcut="r">recent reads</SectionTitle>
           <p className="text-[13px] text-muted-foreground mb-4 -mt-2">Research papers and insights I am currently exploring.</p>
@@ -655,7 +520,6 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Contact */}
         <BlurFade delay={0.7} inView>
           <SectionTitle id="contact" shortcut="c">contact</SectionTitle>
           <div className="w-full border-t border-border mt-2">
@@ -678,7 +542,6 @@ function Index() {
           </div>
         </BlurFade>
 
-        {/* Footer */}
         <BlurFade delay={0.8} inView>
           <footer className="mt-24 flex flex-col items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -693,7 +556,6 @@ function Index() {
         </BlurFade>
       </main>
 
-      {/* Search modal */}
       <AnimatePresence>
         {isSearchOpen && (
           <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4">
