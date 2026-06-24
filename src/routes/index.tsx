@@ -90,7 +90,7 @@ function TechIcon({ label, iconElement, imgSrc }: { label: string; iconElement?:
         {iconElement ? (
           iconElement
         ) : (
-          <img src={imgSrc} alt={label} className="w-8 h-8 object-contain select-none pointer-events-none" />
+          <img src={imgSrc} alt={label} className="w-12 h-12 object-contain select-none pointer-events-none" />
         )}
       </div>
     </div>
@@ -460,7 +460,7 @@ function Index() {
         </BlurFade>
 
         <BlurFade delay={0.2} inView>
-          <div className="space-y-0 mt-0 text-[15.5px] leading-relaxed text-muted-foreground">
+          <div className="space-y-0 mt-3 text-[14px] leading-relaxed text-muted-foreground">
             <p>I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to core infrastructure, including implementing custom designs for language models.</p>
             <p>I’m driven by the desire to build things that make an impact. Currently diving into deep learning, NLP, and transformer architecture.</p>
           </div>
@@ -469,7 +469,7 @@ function Index() {
         {/* Skill stack without boxes */}
         <BlurFade delay={0.3} inView>
           <SectionTitle id="stack" shortcut="s">skill / stack</SectionTitle>
-          <div className="flex flex-wrap gap-x-6 gap-y-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-4">
             <TechIcon label="PYTHON" imgSrc="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" />
             <TechIcon label="PYTORCH" imgSrc="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pytorch/pytorch-original.svg" />
             <TechIcon label="TENSORFLOW" imgSrc="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tensorflow/tensorflow-original.svg" />
