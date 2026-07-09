@@ -409,7 +409,7 @@ function Index() {
               </div>
               <div className="text-center sm:text-left">
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <h1 style={{ fontFamily: "'EB Garamond', serif" }} className="text-4xl md:text-5xl font-semibold tracking-tight text-zinc-800 dark:text-foreground">
+                  <h1 style={{ fontFamily: "'EB Garamond', serif" }} className="text-3xl md:text-4xl font-semibold tracking-tight text-zinc-800 dark:text-foreground">
                     Hi, I'm Syphax
                   </h1>
                   <svg
@@ -460,7 +460,7 @@ function Index() {
         </BlurFade>
 
         <BlurFade delay={0.2} inView>
-          <div className="space-y-0 mt-3 text-[14px] leading-relaxed text-muted-foreground">
+          <div className="space-y-3 mt-3 text-[15px] leading-relaxed text-muted-foreground">
             <p>I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to core infrastructure, including implementing custom designs for language models.</p>
             <p>I’m driven by the desire to build things that make an impact. Currently diving into deep learning, NLP, and transformer architecture.</p>
           </div>
