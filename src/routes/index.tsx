@@ -460,8 +460,8 @@ function Index() {
         </BlurFade>
 
         <BlurFade delay={0.2} inView>
-          <div className="space-y-3 mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            <p>I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to core infrastructure, including implementing custom designs for language models.</p>
+          <div className="space-y-2 mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            <p>I'm a student with a keen interest in AI/ML engineering and research. I wish to contribute to core infrastructure, including implementing new designs for language models.</p>
             <p>I’m driven by the desire to build things that make an impact. Currently diving into deep learning, NLP, and transformer architecture.</p>
           </div>
         </BlurFade>
