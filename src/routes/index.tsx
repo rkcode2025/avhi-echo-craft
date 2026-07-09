@@ -410,7 +410,7 @@ function Index() {
               <div className="text-center sm:text-left">
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <h1 style={{ fontFamily: "'EB Garamond', serif" }} className="text-4xl md:text-5xl font-semibold tracking-tight text-zinc-800 dark:text-foreground">
-                    Syphax
+                    Hi, I'm Syphax
                   </h1>
                   <svg
                     viewBox="0 0 24 24"
